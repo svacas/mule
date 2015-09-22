@@ -16,11 +16,11 @@ import org.mule.api.MuleException;
 import org.mule.extension.api.ExtensionManager;
 import org.mule.module.extension.HeisenbergExtension;
 import org.mule.module.extension.internal.util.ExtensionsTestUtils;
-import org.mule.tck.junit4.ExtensionsFunctionalTestCase;
+import org.mule.tck.junit4.ExtensionFunctionalTestCase;
 
 import org.junit.Test;
 
-public class OperationExecutionTestCase extends ExtensionsFunctionalTestCase
+public class OperationExecutionTestCase extends ExtensionFunctionalTestCase
 {
 
     private static final String GUSTAVO_FRING = "Gustavo Fring";
