@@ -32,8 +32,6 @@ import org.springframework.beans.factory.annotation.RequiredAnnotationBeanPostPr
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
-import org.springframework.beans.factory.support.BeanDefinitionReader;
-import org.springframework.beans.factory.support.AbstractBeanFactory;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.CglibSubclassingInstantiationStrategy;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
@@ -225,8 +223,7 @@ public class MuleArtifactContext extends OsgiBundleXmlApplicationContext
         beanDefinitionReader.setDocumentReaderClass(getBeanDefinitionDocumentReaderClass());
         //add error reporting
         beanDefinitionReader.setProblemReporter(new MissingParserProblemReporter());
-
-        //registerAnnotationConfigProcessors(beanDefinitionReader.getRegistry(), null);
+        registerAnnotationConfigProcessors(beanDefinitionReader.getRegistry(), null);
     }
 
     private void registerAnnotationConfigProcessors(BeanDefinitionRegistry registry, Object source)
