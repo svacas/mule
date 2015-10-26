@@ -10,11 +10,11 @@ import org.mule.api.MuleContext;
 import org.mule.api.MuleException;
 import org.mule.api.lifecycle.InitialisationException;
 import org.mule.api.lifecycle.Lifecycle;
-import org.mule.extension.api.connection.ConnectionHandler;
+import org.mule.extension.api.connection.ConnectionProvider;
 
 import javax.inject.Inject;
 
-public class PetStoreClientConnectionHandler implements ConnectionHandler<PetStoreConnectorConfig, PetStoreClient>, Lifecycle
+public class PetStoreClientConnectionProvider implements ConnectionProvider<PetStoreConnectorConfig, PetStoreClient>, Lifecycle
 {
 
     private int initialise, start, stop, dispose = 0;

@@ -9,8 +9,8 @@ package org.mule.module.extension.internal.runtime.connector;
 import static java.lang.String.format;
 import static org.mule.config.i18n.MessageFactory.createStaticMessage;
 import org.mule.api.MuleRuntimeException;
-import org.mule.extension.annotation.api.connector.Connector;
-import org.mule.extension.api.connection.ConnectionHandler;
+import org.mule.extension.annotation.api.connector.ConnectionType;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.fluent.BaseDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDeclaration;
@@ -22,13 +22,13 @@ import org.mule.util.ClassUtils;
 /**
  * Traverses all the {@link ConfigurationDeclaration configuration declarations} in the supplied
  * {@link DescribingContext} looking for those which were generated from a class annotated with
- * {@link Connector}.
+ * {@link ConnectionType}.
  * <p/>
  * The matching {@link ConfigurationDeclaration declarations} are enriched with a {@link InterceptorFactory}
  * that creates instances of {@link ConnectionInterceptor}
  * <p/>
  * {@link #extractAnnotation(BaseDeclaration, Class)} is used to determine if a {@link ConfigurationDeclaration} is
- * annotated with {@link Connector} or not.
+ * annotated with {@link ConnectionType} or not.
  *
  * @since 4.0
  */
@@ -40,32 +40,32 @@ public final class ConnectorModelEnricher extends AbstractAnnotatedModelEnricher
     {
         Declaration declaration = describingContext.getDeclarationDescriptor().getDeclaration();
         declaration.getConfigurations().forEach(configurationDeclaration -> {
-            Connector connectorAnnotation = extractAnnotation(configurationDeclaration, Connector.class);
-            if (connectorAnnotation != null)
+            ConnectionType connectionTypeAnnotation = extractAnnotation(configurationDeclaration, ConnectionType.class);
+            if (connectionTypeAnnotation != null)
             {
-                configurationDeclaration.addInterceptorFactory(createConnectionInterceptorFactory(configurationDeclaration, connectorAnnotation));
+                configurationDeclaration.addInterceptorFactory(createConnectionInterceptorFactory(configurationDeclaration, connectionTypeAnnotation));
             }
         });
     }
 
-    private InterceptorFactory createConnectionInterceptorFactory(BaseDeclaration<? extends BaseDeclaration> declaration, Connector connectorAnnotation)
+    private InterceptorFactory createConnectionInterceptorFactory(BaseDeclaration<? extends BaseDeclaration> declaration, ConnectionType connectionTypeAnnotation)
     {
-        return () -> new ConnectionInterceptor<>(createConnectionHandler(declaration, connectorAnnotation));
+        return () -> new ConnectionInterceptor<>(createConnectionHandler(declaration, connectionTypeAnnotation));
     }
 
-    private ConnectionHandler<?, ?> createConnectionHandler(BaseDeclaration<? extends BaseDeclaration> declaration, Connector connectorAnnotation)
+    private ConnectionProvider<?, ?> createConnectionHandler(BaseDeclaration<? extends BaseDeclaration> declaration, ConnectionType connectionTypeAnnotation)
     {
-        ConnectionHandler<?, ?> connectionHandler;
+        ConnectionProvider<?, ?> connectionProvider;
         try
         {
-            connectionHandler = ClassUtils.instanciateClass(connectorAnnotation.value());
+            connectionProvider = ClassUtils.instanciateClass(connectionTypeAnnotation.value());
         }
         catch (Exception e)
         {
             throw new MuleRuntimeException(createStaticMessage(format(
                     "Could not instantiate ConnectionHandler of type '%s' for configuration of type '%s'",
-                    connectorAnnotation.value().getName(), extractExtensionType(declaration).getName())), e);
+                    connectionTypeAnnotation.value().getName(), extractExtensionType(declaration).getName())), e);
         }
-        return connectionHandler;
+        return connectionProvider;
     }
 }

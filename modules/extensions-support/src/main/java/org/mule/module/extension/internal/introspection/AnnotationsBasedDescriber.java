@@ -133,7 +133,7 @@ public final class AnnotationsBasedDescriber implements Describer
             configuration = declaration.withConfig(Extension.DEFAULT_CONFIG_NAME).describedAs(Extension.DEFAULT_CONFIG_DESCRIPTION);
         }
 
-        configuration.instantiatedWith(new TypeAwareConfigurationInstantiator(configurationType))
+        configuration.createdWith(new TypeAwareConfigurationFactory(configurationType))
                 .withModelProperty(ImplementingTypeModelProperty.KEY, new ImplementingTypeModelProperty(configurationType));
 
         declareConfigurationParameters(configurationType, configuration);

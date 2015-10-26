@@ -8,10 +8,12 @@ package org.mule.module.extension.internal.introspection;
 
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.toMap;
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.validateRepeatedNames;
+import static org.mule.util.CollectionUtils.immutableList;
 import static org.mule.util.Preconditions.checkArgument;
 import org.mule.extension.api.exception.NoSuchConfigurationException;
 import org.mule.extension.api.exception.NoSuchOperationException;
 import org.mule.extension.api.introspection.ConfigurationModel;
+import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.OperationModel;
 import org.mule.extension.api.introspection.ParameterModel;
@@ -34,6 +36,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
     private final String version;
     private final Map<String, ConfigurationModel> configurations;
     private final Map<String, OperationModel> operations;
+    private final List<ConnectionProviderModel> connectionProviders;
 
     /**
      * Creates a new instance with the given state
@@ -51,6 +54,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
                                       String version,
                                       List<ConfigurationModel> configurationModels,
                                       List<OperationModel> operationModels,
+                                      List<ConnectionProviderModel> connectionProviders,
                                       Map<String, Object> modelProperties)
     {
         super(name, description, modelProperties);
@@ -60,6 +64,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
 
         this.configurations = toMap(configurationModels);
         this.operations = toMap(operationModels);
+        this.connectionProviders = immutableList(connectionProviders);
 
         checkArgument(!StringUtils.isBlank(version), "version cannot be blank");
         this.version = version;
@@ -120,5 +125,14 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
         }
 
         return operationModel;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<ConnectionProviderModel> getConnectionProviders()
+    {
+        return connectionProviders;
     }
 }

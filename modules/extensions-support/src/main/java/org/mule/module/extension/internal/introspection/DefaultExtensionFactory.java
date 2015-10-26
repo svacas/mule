@@ -12,17 +12,18 @@ import static org.mule.extension.api.introspection.ExpressionSupport.NOT_SUPPORT
 import static org.mule.extension.api.introspection.ExpressionSupport.REQUIRED;
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.alphaSortDescribedList;
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.createInterceptors;
-import static org.mule.util.Preconditions.checkArgument;
 import org.mule.api.registry.ServiceRegistry;
 import org.mule.common.MuleVersion;
 import org.mule.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.extension.api.introspection.ConfigurationModel;
+import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.extension.api.introspection.ExtensionFactory;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.OperationModel;
 import org.mule.extension.api.introspection.ParameterModel;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDeclaration;
+import org.mule.extension.api.introspection.declaration.fluent.ConnectionProviderDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.Declaration;
 import org.mule.extension.api.introspection.declaration.fluent.Descriptor;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
@@ -33,6 +34,7 @@ import org.mule.extension.api.runtime.Interceptor;
 import org.mule.module.extension.internal.DefaultDescribingContext;
 import org.mule.module.extension.internal.runtime.executor.OperationExecutorFactoryWrapper;
 import org.mule.util.ValueHolder;
+import org.mule.util.collection.ImmutableListCollector;
 
 import com.google.common.collect.ImmutableList;
 
@@ -96,6 +98,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
                                                                     declaration.getVersion(),
                                                                     sortConfigurations(toConfigurations(declaration.getConfigurations(), extensionModelValueHolder)),
                                                                     alphaSortDescribedList(toOperations(declaration.getOperations())),
+                                                                    toConnectionProviders(declaration.getConnectionProviders()),
                                                                     declaration.getModelProperties());
 
         extensionModelValueHolder.set(extensionModel);
@@ -120,10 +123,9 @@ public final class DefaultExtensionFactory implements ExtensionFactory
 
     private List<ConfigurationModel> toConfigurations(List<ConfigurationDeclaration> declarations, ValueHolder<ExtensionModel> extensionModelValueHolder)
     {
-        checkArgument(!declarations.isEmpty(), "A extension must have at least one configuration");
         return declarations.stream()
                 .map(declaration -> toConfiguration(declaration, extensionModelValueHolder))
-                .collect(Collectors.toList());
+                .collect(new ImmutableListCollector<>());
     }
 
     private ConfigurationModel toConfiguration(ConfigurationDeclaration declaration, ValueHolder<ExtensionModel> extensionModel)
@@ -131,7 +133,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
         return new ImmutableConfigurationModel(declaration.getName(),
                                                declaration.getDescription(),
                                                extensionModel::get,
-                                               declaration.getConfigurationInstantiator(),
+                                               declaration.getConfigurationFactory(),
                                                toConfigParameters(declaration.getParameters()),
                                                declaration.getModelProperties(),
                                                declaration.getInterceptorFactories());
@@ -139,12 +141,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
 
     private List<OperationModel> toOperations(List<OperationDeclaration> declarations)
     {
-        if (declarations.isEmpty())
-        {
-            return ImmutableList.of();
-        }
-
-        return declarations.stream().map(this::toOperation).collect(Collectors.toList());
+        return declarations.stream().map(this::toOperation).collect(new ImmutableListCollector<>());
     }
 
     private OperationModel toOperation(OperationDeclaration declaration)
@@ -162,9 +159,19 @@ public final class DefaultExtensionFactory implements ExtensionFactory
                                            declaration.getInterceptorFactories());
     }
 
+    private List<ConnectionProviderModel> toConnectionProviders(List<ConnectionProviderDeclaration> declarations)
+    {
+        return declarations.stream().map(this::toConnectionProvider).collect(new ImmutableListCollector<>());
+    }
+
+    private ConnectionProviderModel toConnectionProvider(ConnectionProviderDeclaration declaration)
+    {
+        List<ParameterModel> parameters = toConfigParameters(declaration.getParameters());
+        return new ImmutableConnectionProviderModel(parameters, declaration.getFactory());
+    }
+
     private List<ParameterModel> toConfigParameters(List<ParameterDeclaration> declarations)
     {
-
         List<ParameterModel> parameterModels = toParameters(declarations);
         alphaSortDescribedList(parameterModels);
 

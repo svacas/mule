@@ -10,12 +10,12 @@ import org.mule.extension.annotation.api.Configurations;
 import org.mule.extension.annotation.api.Extension;
 import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.capability.Xml;
-import org.mule.extension.annotation.api.connector.Connector;
+import org.mule.extension.annotation.api.connector.ConnectionType;
 
 @Extension(name = "petstore", description = "PetStore Test connector")
 @Configurations(PetStoreConnectorConfig.class)
 @Operations(PetStoreOperations.class)
-@Connector(PetStoreClientConnectionHandler.class)
+@ConnectionType(PetStoreClientConnectionProvider.class)
 @Xml(schemaLocation = "http://www.mulesoft.org/schema/mule/petstore", namespace = "petstore", schemaVersion = "4.0")
 public class PetStoreConnector
 {

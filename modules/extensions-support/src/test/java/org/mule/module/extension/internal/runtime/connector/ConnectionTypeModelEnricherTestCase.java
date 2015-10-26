@@ -35,7 +35,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
 @RunWith(MockitoJUnitRunner.class)
-public class ConnectorModelEnricherTestCase extends AbstractMuleTestCase
+public class ConnectionTypeModelEnricherTestCase extends AbstractMuleTestCase
 {
 
     @Mock

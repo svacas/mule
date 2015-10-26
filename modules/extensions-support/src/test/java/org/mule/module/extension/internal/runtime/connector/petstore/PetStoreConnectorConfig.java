@@ -8,10 +8,10 @@ package org.mule.module.extension.internal.runtime.connector.petstore;
 
 import org.mule.extension.annotation.api.Configuration;
 import org.mule.extension.annotation.api.Parameter;
-import org.mule.extension.annotation.api.connector.Connector;
+import org.mule.extension.annotation.api.connector.ConnectionType;
 
 @Configuration(name = "config")
-@Connector(PetStoreClientConnectionHandler.class)
+@ConnectionType(PetStoreClientConnectionProvider.class)
 public class PetStoreConnectorConfig extends AbstractPetStoreConfig
 {
 

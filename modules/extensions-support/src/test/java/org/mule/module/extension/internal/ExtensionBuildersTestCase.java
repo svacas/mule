@@ -15,6 +15,7 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.notNull;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -40,6 +41,8 @@ import static org.mule.extension.api.introspection.declaration.tck.TestWebServic
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.MTOM_DESCRIPTION;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.MTOM_ENABLED;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.OPERATION;
+import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.PASSWORD;
+import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.PASSWORD_DESCRIPTION;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.PORT;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.SERVICE;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.SERVICE_ADDRESS;
@@ -47,6 +50,8 @@ import static org.mule.extension.api.introspection.declaration.tck.TestWebServic
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.SERVICE_PORT;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.THE_OPERATION_TO_USE;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.URI_TO_FIND_THE_WSDL;
+import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.USERNAME;
+import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.USERNAME_DESCRIPTION;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.VERSION;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.WSDL_LOCATION;
 import static org.mule.extension.api.introspection.declaration.tck.TestWebServiceConsumerDeclarationReference.WS_CONSUMER;
@@ -55,8 +60,9 @@ import org.mule.api.registry.ServiceRegistry;
 import org.mule.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.extension.api.exception.NoSuchConfigurationException;
 import org.mule.extension.api.exception.NoSuchOperationException;
-import org.mule.extension.api.introspection.ConfigurationInstantiator;
+import org.mule.extension.api.introspection.ConfigurationFactory;
 import org.mule.extension.api.introspection.ConfigurationModel;
+import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.extension.api.introspection.DataQualifier;
 import org.mule.extension.api.introspection.DataType;
 import org.mule.extension.api.introspection.ExpressionSupport;
@@ -93,6 +99,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     @Mock
     private ServiceRegistry serviceRegistry;
 
+    private final TestWebServiceConsumerDeclarationReference reference = new TestWebServiceConsumerDeclarationReference();
     private DeclarationDescriptor descriptor;
     private ExtensionModel extensionModel;
 
@@ -176,16 +183,16 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     @Test
     public void configurationsOrder()
     {
-        ConfigurationInstantiator mockInstantiator = mock(ConfigurationInstantiator.class);
+        ConfigurationFactory mockInstantiator = mock(ConfigurationFactory.class);
 
         final String defaultConfiguration = "default";
         final String beta = "beta";
         final String alpha = "alpha";
 
         ExtensionModel extensionModel = factory.createFrom(new DeclarationDescriptor().named("test").onVersion("1.0")
-                                                                   .withConfig(defaultConfiguration).describedAs(defaultConfiguration).instantiatedWith(mockInstantiator)
-                                                                   .withConfig(beta).describedAs(beta).instantiatedWith(mockInstantiator)
-                                                                   .withConfig(alpha).describedAs(alpha).instantiatedWith(mockInstantiator));
+                                                                   .withConfig(defaultConfiguration).describedAs(defaultConfiguration).createdWith(mockInstantiator)
+                                                                   .withConfig(beta).describedAs(beta).createdWith(mockInstantiator)
+                                                                   .withConfig(alpha).describedAs(alpha).createdWith(mockInstantiator));
 
         List<ConfigurationModel> configurationModels = extensionModel.getConfigurations();
         assertThat(configurationModels, hasSize(3));
@@ -271,6 +278,19 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
         }
     }
 
+    @Test
+    public void connectionProviders()
+    {
+        assertThat(extensionModel.getConnectionProviders(), hasSize(1));
+        ConnectionProviderModel connectionProvider = extensionModel.getConnectionProviders().get(0);
+        assertThat(connectionProvider, is(notNull()));
+        assertThat(connectionProvider.getFactory(), is(sameInstance(reference.getConnectionProviderFactory())));
+
+        List<ParameterModel> parameters = connectionProvider.getParameters();
+        assertParameter(parameters.get(0), USERNAME, USERNAME_DESCRIPTION, SUPPORTED, true, of(String.class), STRING, null);
+        assertParameter(parameters.get(1), PASSWORD, PASSWORD_DESCRIPTION, SUPPORTED, true, of(String.class), STRING, null);
+    }
+
     private void assertDescribingContext(ModelEnricher modelEnricher)
     {
         ArgumentCaptor<DescribingContext> captor = ArgumentCaptor.forClass(DescribingContext.class);
@@ -352,6 +372,6 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
 
     private DeclarationDescriptor createDeclarationDescriptor()
     {
-        return new TestWebServiceConsumerDeclarationReference().getDescriptor();
+        return reference.getDescriptor();
     }
 }
