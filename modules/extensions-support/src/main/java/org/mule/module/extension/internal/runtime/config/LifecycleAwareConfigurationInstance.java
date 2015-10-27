@@ -13,6 +13,7 @@ import static org.mule.api.lifecycle.LifecycleUtils.stopIfNeeded;
 import static org.mule.util.Preconditions.checkState;
 import org.mule.api.MuleException;
 import org.mule.api.lifecycle.InitialisationException;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.Interceptable;
 import org.mule.extension.api.runtime.ConfigurationInstance;
@@ -22,6 +23,7 @@ import org.mule.module.extension.internal.introspection.AbstractInterceptable;
 import org.mule.time.TimeSupplier;
 
 import java.util.List;
+import java.util.Optional;
 
 import javax.inject.Inject;
 
@@ -46,6 +48,7 @@ public final class LifecycleAwareConfigurationInstance<T> extends AbstractInterc
     private final String name;
     private final ConfigurationModel model;
     private final T value;
+    private final Optional<ConnectionProvider> connectionProvider;
 
 
     private ConfigurationStats configurationStats;
@@ -148,6 +151,15 @@ public final class LifecycleAwareConfigurationInstance<T> extends AbstractInterc
     public String getName()
     {
         return name;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Optional<ConnectionProvider> getConnectionProvider()
+    {
+        return connectionProvider;
     }
 
     /**

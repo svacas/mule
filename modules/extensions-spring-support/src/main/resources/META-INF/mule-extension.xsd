@@ -109,5 +109,15 @@
         </xsd:attribute>
     </xsd:complexType>
 
+    <xsd:complexType name="abstractConnectionProviderType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Abstract type for ConnectionProvider elements.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="mule:annotatedType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
 
 </xsd:schema>

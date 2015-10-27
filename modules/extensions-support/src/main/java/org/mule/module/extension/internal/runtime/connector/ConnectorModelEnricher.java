@@ -6,18 +6,13 @@
  */
 package org.mule.module.extension.internal.runtime.connector;
 
-import static java.lang.String.format;
-import static org.mule.config.i18n.MessageFactory.createStaticMessage;
-import org.mule.api.MuleRuntimeException;
 import org.mule.extension.annotation.api.connector.ConnectionType;
-import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.fluent.BaseDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.Declaration;
 import org.mule.extension.api.runtime.InterceptorFactory;
 import org.mule.module.extension.internal.model.AbstractAnnotatedModelEnricher;
-import org.mule.util.ClassUtils;
 
 /**
  * Traverses all the {@link ConfigurationDeclaration configuration declarations} in the supplied
@@ -43,29 +38,8 @@ public final class ConnectorModelEnricher extends AbstractAnnotatedModelEnricher
             ConnectionType connectionTypeAnnotation = extractAnnotation(configurationDeclaration, ConnectionType.class);
             if (connectionTypeAnnotation != null)
             {
-                configurationDeclaration.addInterceptorFactory(createConnectionInterceptorFactory(configurationDeclaration, connectionTypeAnnotation));
+                configurationDeclaration.addInterceptorFactory(ConnectionInterceptor::new);
             }
         });
-    }
-
-    private InterceptorFactory createConnectionInterceptorFactory(BaseDeclaration<? extends BaseDeclaration> declaration, ConnectionType connectionTypeAnnotation)
-    {
-        return () -> new ConnectionInterceptor<>(createConnectionHandler(declaration, connectionTypeAnnotation));
-    }
-
-    private ConnectionProvider<?, ?> createConnectionHandler(BaseDeclaration<? extends BaseDeclaration> declaration, ConnectionType connectionTypeAnnotation)
-    {
-        ConnectionProvider<?, ?> connectionProvider;
-        try
-        {
-            connectionProvider = ClassUtils.instanciateClass(connectionTypeAnnotation.value());
-        }
-        catch (Exception e)
-        {
-            throw new MuleRuntimeException(createStaticMessage(format(
-                    "Could not instantiate ConnectionHandler of type '%s' for configuration of type '%s'",
-                    connectionTypeAnnotation.value().getName(), extractExtensionType(declaration).getName())), e);
-        }
-        return connectionProvider;
     }
 }

@@ -18,14 +18,14 @@ import org.apache.commons.lang.StringUtils;
 final class ImmutableConnectionProviderModel implements ConnectionProviderModel
 {
     private final String name;
-    private final List<ParameterModel> parameters;
+    private final List<ParameterModel> parameterModels;
     private final ConnectionProviderFactory factory;
 
-    public ImmutableConnectionProviderModel(String name, List<ParameterModel> parameters, ConnectionProviderFactory factory)
+    public ImmutableConnectionProviderModel(String name, List<ParameterModel> parameterModels, ConnectionProviderFactory factory)
     {
         checkArgument(!StringUtils.isBlank(name), "name attribute cannot be null or blank");
         this.name = name;
-        this.parameters = parameters;
+        this.parameterModels = parameterModels;
         this.factory = factory;
     }
 
@@ -33,9 +33,9 @@ final class ImmutableConnectionProviderModel implements ConnectionProviderModel
      * {@inheritDoc}
      */
     @Override
-    public List<ParameterModel> getParameters()
+    public List<ParameterModel> getParameterModels()
     {
-        return parameters;
+        return parameterModels;
     }
 
     /**

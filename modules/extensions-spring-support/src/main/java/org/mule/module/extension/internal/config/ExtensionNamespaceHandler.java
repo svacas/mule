@@ -100,14 +100,18 @@ public class ExtensionNamespaceHandler extends NamespaceHandlerSupport
         }
     }
 
-    private void registerOperations(ExtensionModel extensionModel) throws Exception
+    private void registerOperations(ExtensionModel extensionModel)
     {
         extensionModel.getOperations().forEach(operationModel -> registerBeanDefinitionParser(hyphenize(operationModel.getName()), new OperationBeanDefinitionParser(extensionModel, operationModel)));
     }
 
-    private void registerConfigurations(ExtensionModel extensionModel) throws Exception
+    private void registerConfigurations(ExtensionModel extensionModel)
     {
         extensionModel.getConfigurations().forEach(configurationModel -> registerBeanDefinitionParser(configurationModel.getName(), new ConfigurationBeanDefinitionParser(extensionModel, configurationModel)));
+    }
+
+    private void registerConnectionProviders(ExtensionModel extensionModel) {
+        extensionModel.getConnectionProviders().forEach(providerModel -> registerBeanDefinitionParser(providerModel.getName(), new ConnectionProviderBeanDefinitionParser(extensionModel, providerModel)));
     }
 
     private void registerTopLevelParameters(ExtensionModel extensionModel)

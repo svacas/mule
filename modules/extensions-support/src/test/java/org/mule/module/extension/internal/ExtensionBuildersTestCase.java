@@ -286,7 +286,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
         assertThat(connectionProvider, is(notNull()));
         assertThat(connectionProvider.getFactory(), is(sameInstance(reference.getConnectionProviderFactory())));
 
-        List<ParameterModel> parameters = connectionProvider.getParameters();
+        List<ParameterModel> parameters = connectionProvider.getParameterModels();
         assertParameter(parameters.get(0), USERNAME, USERNAME_DESCRIPTION, SUPPORTED, true, of(String.class), STRING, null);
         assertParameter(parameters.get(1), PASSWORD, PASSWORD_DESCRIPTION, SUPPORTED, true, of(String.class), STRING, null);
     }

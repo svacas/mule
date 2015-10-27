@@ -24,6 +24,7 @@
                        recipe="recipes"
                        initialHealth="CANCER"
                        finalHealth="CANCER">
+        <heisenberg:connection username="" password="" />
         <extension:dynamic-config-policy>
             <extension:expiration-policy maxIdleTime="100" timeUnit="MILLISECONDS" />
         </extension:dynamic-config-policy>

@@ -19,8 +19,10 @@ import static org.mule.module.extension.internal.capability.xml.schema.model.Sch
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_ABSTRACT_EXTENSION_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_ABSTRACT_MESSAGE_PROCESSOR;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_ABSTRACT_MESSAGE_PROCESSOR_TYPE;
+import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_CONNECTION_PROVIDER_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_NAMESPACE;
+import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_PREFIX;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_SCHEMA_LOCATION;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_MESSAGE_PROCESSOR_OR_OUTBOUND_ENDPOINT_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_NAMESPACE;
@@ -41,6 +43,7 @@ import static org.mule.module.extension.internal.util.NameUtils.hyphenize;
 import static org.mule.util.Preconditions.checkArgument;
 import org.mule.extension.annotation.api.Extensible;
 import org.mule.extension.api.introspection.ConfigurationModel;
+import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.extension.api.introspection.DataQualifier;
 import org.mule.extension.api.introspection.DataType;
 import org.mule.extension.api.introspection.ExpressionSupport;
@@ -83,6 +86,7 @@ import org.mule.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.math.BigInteger;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -97,13 +101,14 @@ import javax.xml.namespace.QName;
  *
  * @since 3.7.0
  */
-public class SchemaBuilder
+public final class SchemaBuilder
 {
 
     private static final String UNBOUNDED = "unbounded";
 
     private final Set<DataType> registeredEnums = new HashSet<>();
     private final Map<DataType, ComplexTypeHolder> registeredComplexTypesHolders = new HashMap<>();
+    private final Set<String> connectionProviderNames = new HashSet<>();
     private final Map<String, NamedGroup> substitutionGroups = new HashMap<>();
     private final ObjectFactory objectFactory = new ObjectFactory();
 
@@ -165,60 +170,82 @@ public class SchemaBuilder
         return this;
     }
 
+    public SchemaBuilder registerConnectionProviderElements(Collection<ConnectionProviderModel> providerModels)
+    {
+        providerModels.forEach(this::registerConnectionProviderElement);
+        connectionProviderNames.forEach(providerName -> {
+            Element substitutionElement = new TopLevelElement();
+            substitutionElement.setName(providerName);
+            substitutionElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
+            substitutionElement.setAbstract(true);
+            substitutionElement.setAnnotation(createDocAnnotation("A placeholder for ConnectionProvider elements."));
+            schema.getSimpleTypeOrComplexTypeOrGroup().add(substitutionElement);
+        });
+
+        return this;
+    }
+
+    private SchemaBuilder registerConnectionProviderElement(ConnectionProviderModel providerModel)
+    {
+        String name = getElementName(providerModel);
+        connectionProviderNames.add(name);
+
+        LocalComplexType complexType = new LocalComplexType();
+        Element extension = new TopLevelElement();
+        extension.setName(providerModel.getName());
+        extension.setSubstitutionGroup(new QName(MULE_EXTENSION_NAMESPACE, name, MULE_EXTENSION_PREFIX));
+        extension.setComplexType(complexType);
+
+        ComplexContent complexContent = new ComplexContent();
+        complexType.setComplexContent(complexContent);
+        ExtensionType providerType = new ExtensionType();
+        providerType.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
+        complexContent.setExtension(providerType);
+
+        schema.getSimpleTypeOrComplexTypeOrGroup().add(extension);
+
+        final ExplicitGroup choice = new ExplicitGroup();
+        choice.setMinOccurs(new BigInteger("0"));
+        choice.setMaxOccurs(UNBOUNDED);
+
+        registerParameters(providerType, choice, providerModel.getParameterModels());
+        return this;
+    }
+
     public SchemaBuilder registerConfigElement(final ConfigurationModel configurationModel)
     {
-        final ExtensionType config = registerExtension(configurationModel.getName());
+        ExtensionType config = registerExtension(configurationModel.getName());
         config.getAttributeOrAttributeGroup().add(createNameAttribute());
+
+        addConnectionProviderSequence(config);
 
         final ExplicitGroup choice = new ExplicitGroup();
         choice.setMinOccurs(new BigInteger("0"));
         choice.setMaxOccurs(UNBOUNDED);
 
         addDynamicConfigPolicyElement(choice, configurationModel);
-
-        for (final ParameterModel parameterModel : configurationModel.getParameterModels())
-        {
-            parameterModel.getType().getQualifier().accept(new AbstractDataQualifierVisitor()
-            {
-
-                private boolean forceOptional = false;
-
-                @Override
-                public void onList()
-                {
-                    forceOptional = true;
-                    defaultOperation();
-                    generateCollectionElement(choice, parameterModel, true);
-                }
-
-                @Override
-                public void onPojo()
-                {
-                    forceOptional = false;
-                    defaultOperation();
-                    registerComplexTypeChildElement(choice,
-                                                    parameterModel.getName(),
-                                                    parameterModel.getDescription(),
-                                                    parameterModel.getType(),
-                                                    isRequired(parameterModel, forceOptional));
-                }
-
-                @Override
-                protected void defaultOperation()
-                {
-                    config.getAttributeOrAttributeGroup().add(createAttribute(parameterModel, isRequired(parameterModel, forceOptional)));
-                }
-            });
-        }
-
+        registerParameters(config, choice, configurationModel.getParameterModels());
         config.setAnnotation(createDocAnnotation(configurationModel.getDescription()));
 
-        if (!choice.getParticle().isEmpty())
-        {
-            config.setChoice(choice);
-        }
-
         return this;
+    }
+
+    private void addConnectionProviderSequence(ExtensionType config)
+    {
+        ExplicitGroup connectionProviderSequence = new ExplicitGroup();
+        connectionProviderSequence.setMinOccurs(new BigInteger("0"));
+        connectionProviderSequence.setMaxOccurs("1");
+
+        connectionProviderNames.forEach(providerName -> {
+            Element providerElement = new TopLevelElement();
+            providerElement.setRef(new QName(providerName));
+            providerElement.setMinOccurs(new BigInteger("0"));
+            providerElement.setMaxOccurs("1");
+
+            connectionProviderSequence.getParticle().add(providerElement);
+        });
+
+        config.setSequence(connectionProviderSequence);
     }
 
     private Attribute createNameAttribute()
@@ -248,6 +275,49 @@ public class SchemaBuilder
         }
     }
 
+    private void registerParameters(ExtensionType type, ExplicitGroup choice, Collection<ParameterModel> parameterModels)
+    {
+        for (final ParameterModel parameterModel : parameterModels)
+        {
+            parameterModel.getType().getQualifier().accept(new AbstractDataQualifierVisitor()
+            {
+
+                private boolean forceOptional = false;
+
+                @Override
+                public void onList()
+                {
+                    forceOptional = true;
+                    defaultOperation();
+                    generateCollectionElement(choice, parameterModel, true);
+                }
+
+                @Override
+                public void onPojo()
+                {
+                    forceOptional = false;
+                    defaultOperation();
+                    registerComplexTypeChildElement(choice,
+                                                    parameterModel.getName(),
+                                                    parameterModel.getDescription(),
+                                                    parameterModel.getType(),
+                                                    isRequired(parameterModel, forceOptional));
+                }
+
+                @Override
+                protected void defaultOperation()
+                {
+                    type.getAttributeOrAttributeGroup().add(createAttribute(parameterModel, isRequired(parameterModel, forceOptional)));
+                }
+            });
+        }
+
+        if (!choice.getParticle().isEmpty())
+        {
+            type.setChoice(choice);
+        }
+    }
+
     /**
      * Registers a pojo type creating a base complex type and a substitutable
      * top level type while assigning it a name. This method will not register
@@ -274,6 +344,13 @@ public class SchemaBuilder
     private String getBaseTypeName(DataType type)
     {
         return type.getName();
+    }
+
+    private String getElementName(ConnectionProviderModel providerModel)
+    {
+        return String.format("connectionProvider-%s-%s",
+                             providerModel.getConfigurationType().getName(),
+                             providerModel.getConnectionType().getName());
     }
 
     private TopLevelComplexType registerBasePojoType(DataType type, String description)

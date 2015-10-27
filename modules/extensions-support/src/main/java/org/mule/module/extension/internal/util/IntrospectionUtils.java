@@ -15,7 +15,6 @@ import static org.reflections.ReflectionUtils.getAllMethods;
 import static org.reflections.ReflectionUtils.withAnnotation;
 import static org.reflections.ReflectionUtils.withModifier;
 import static org.reflections.ReflectionUtils.withName;
-import static org.reflections.ReflectionUtils.withParameters;
 import static org.reflections.ReflectionUtils.withTypeAssignableTo;
 import org.mule.api.NestedProcessor;
 import org.mule.extension.annotation.api.Operation;
@@ -226,35 +225,6 @@ public class IntrospectionUtils
     public static Collection<Method> getOperationMethods(Class<?> declaringClass)
     {
         return getAllMethods(declaringClass, withAnnotation(Operation.class), withModifier(Modifier.PUBLIC));
-    }
-
-    public static Method getOperationMethod(Class<?> declaringClass, OperationModel operationModel)
-    {
-        Class<?>[] parameterTypes;
-        if (operationModel.getParameterModels().isEmpty())
-        {
-            parameterTypes = org.apache.commons.lang.ArrayUtils.EMPTY_CLASS_ARRAY;
-        }
-        else
-        {
-            parameterTypes = new Class<?>[operationModel.getParameterModels().size()];
-            int i = 0;
-            for (ParameterModel parameterModel : operationModel.getParameterModels())
-            {
-                parameterTypes[i++] = parameterModel.getType().getRawType();
-            }
-        }
-
-        Collection<Method> methods = getAllMethods(declaringClass,
-                                                   withAnnotation(Operation.class),
-                                                   withModifier(Modifier.PUBLIC),
-                                                   withName(operationModel.getName()),
-                                                   withParameters(parameterTypes));
-
-        checkArgument(!methods.isEmpty(), String.format("Could not find method %s in class %s", operationModel.getName(), declaringClass.getName()));
-        checkArgument(methods.size() == 1, String.format("More than one matching method was found in class %s for operation %s", declaringClass.getName(), operationModel.getName()));
-
-        return methods.iterator().next();
     }
 
     public static String getAlias(Field field)

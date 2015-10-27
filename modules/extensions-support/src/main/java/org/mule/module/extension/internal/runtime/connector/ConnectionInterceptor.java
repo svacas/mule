@@ -16,12 +16,14 @@ import org.mule.api.MuleContext;
 import org.mule.api.MuleException;
 import org.mule.api.lifecycle.InitialisationException;
 import org.mule.api.lifecycle.Lifecycle;
+import org.mule.extension.api.connection.ConnectionException;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.runtime.Interceptor;
 import org.mule.extension.api.runtime.OperationContext;
 import org.mule.module.extension.internal.ExtensionProperties;
 import org.mule.module.extension.internal.runtime.OperationContextAdapter;
 
+import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -40,35 +42,21 @@ import org.slf4j.LoggerFactory;
  * method and is kept until {@link #stop()} is invoked. This happens into a thread-safe manner so concurrent
  * invocations to {@link #before(OperationContext)} will result on only one connection being established and returned.
  *
- * @param <Config>     the generic type for the Config object that will be used to create the connection
- * @param <Connection> the generic type of the connections to be established
  * @since 4.0
  */
 //TODO: Much of the logic here should be moved to the ConnectionService when MULE-8952 is implemented
-class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycle
+class ConnectionInterceptor implements Interceptor, Lifecycle
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConnectionInterceptor.class);
 
-    private final ConnectionProvider<Config, Connection> connectionProvider;
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
     private final Lock readLock = readWriteLock.readLock();
     private final Lock writeLock = readWriteLock.writeLock();
-    private Connection connection = null;
+    private Object connection = null;
 
     @Inject
     private MuleContext muleContext;
-
-    /**
-     * Creates a new instance
-     *
-     * @param connectionProvider the {@link ConnectionProvider} to be used for connecting/disconnecting
-     */
-    public ConnectionInterceptor(ConnectionProvider<Config, Connection> connectionProvider)
-    {
-        checkArgument(connectionProvider != null, "connectionHandler cannot be null");
-        this.connectionProvider = connectionProvider;
-    }
 
     /**
      * Adds a {@code Connection} as a parameter in the {@code operationContext}, following the
@@ -98,7 +86,7 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
     }
 
     //TODO: MULE-8909 && MULE-8910: validate the connection before returning it. Reconnect if necessary
-    private Connection getConnection(OperationContext operationContext)
+    private Object getConnection(OperationContext operationContext) throws ConnectionException
     {
         readLock.lock();
         try
@@ -111,6 +99,11 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
         finally
         {
             readLock.unlock();
+        }
+
+        Optional<ConnectionProvider> connectionProvider = operationContext.getConfiguration().getConnectionProvider();
+        if (!connectionProvider.isPresent()) {
+
         }
 
         writeLock.lock();
@@ -126,7 +119,8 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
             {
                 throw new IllegalStateException("Mule is shutting down... cannot create a new connection");
             }
-            return connection = connectionProvider.connect((Config) operationContext.getConfiguration().getValue());
+
+            return connection = connectionProvider.get().connect(operationContext.getConfiguration().getValue());
         }
         finally
         {
@@ -134,45 +128,6 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
         }
     }
 
-    /**
-     * Performs dependency injection on the {@link #connectionProvider} and if needed
-     * propagates this lifecycle phase into it
-     *
-     * @throws InitialisationException if anything went wrong
-     */
-    @Override
-    public void initialise() throws InitialisationException
-    {
-        try
-        {
-            muleContext.getInjector().inject(connectionProvider);
-            initialiseIfNeeded(connectionProvider, muleContext);
-        }
-        catch (MuleException e)
-        {
-            throw new InitialisationException(e, this);
-        }
-    }
-
-    /**
-     * Propagates this lifecycle phase into the {@link #connectionProvider}
-     *
-     * @throws MuleException if anything went wrong
-     */
-    @Override
-    public void start() throws MuleException
-    {
-        startIfNeeded(connectionProvider);
-    }
-
-    /**
-     * If a connection is currently active, then it disconnects it using
-     * {@link ConnectionProvider#disconnect(Object)}.
-     * <p/>
-     * It also guarantees this lifecycle phase being propagated into the {@link #connectionProvider}
-     *
-     * @throws MuleException if anything went wrong
-     */
     @Override
     public void stop() throws MuleException
     {
@@ -204,7 +159,7 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
             {
                 if (!handlerStopped)
                 {
-                    stopHandler();
+                    stopProvider();
                 }
             }
             finally
@@ -214,7 +169,7 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
         }
     }
 
-    private void stopHandler() throws MuleException
+    private void stopProvider() throws MuleException
     {
         stopIfNeeded(connectionProvider);
     }
@@ -223,17 +178,11 @@ class ConnectionInterceptor<Config, Connection> implements Interceptor, Lifecycl
     {
         try
         {
-            stopHandler();
+            stopProvider();
         }
         catch (Exception e)
         {
             LOGGER.error("Could not stop connection handler " + connectionProvider, e);
         }
-    }
-
-    @Override
-    public void dispose()
-    {
-        disposeIfNeeded(connectionProvider, LOGGER);
     }
 }
