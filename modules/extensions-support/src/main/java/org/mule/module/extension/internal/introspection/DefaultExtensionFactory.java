@@ -166,8 +166,14 @@ public final class DefaultExtensionFactory implements ExtensionFactory
 
     private ConnectionProviderModel toConnectionProvider(ConnectionProviderDeclaration declaration)
     {
-        List<ParameterModel> parameters = toConfigParameters(declaration.getParameters());
-        return new ImmutableConnectionProviderModel(parameters, declaration.getFactory());
+        return new ImmutableConnectionProviderModel(
+                declaration.getName(),
+                declaration.getDescription(),
+                declaration.getConfigurationType(),
+                declaration.getConnectionType(),
+                declaration.getFactory(),
+                toConfigParameters(declaration.getParameters()),
+                declaration.getModelProperties());
     }
 
     private List<ParameterModel> toConfigParameters(List<ParameterDeclaration> declarations)

@@ -6,26 +6,61 @@
  */
 package org.mule.module.extension.internal.config;
 
-import static org.mule.api.config.MuleProperties.OBJECT_MULE_CONTEXT;
-import static org.mule.api.config.MuleProperties.OBJECT_TIME_SUPPLIER;
-import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.parseConfigName;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.parseConnectionProviderName;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.toElementDescriptorBeanDefinition;
+import org.mule.config.spring.util.SpringXMLUtils;
+import org.mule.extension.api.introspection.ConnectionProviderModel;
+import org.mule.util.StringUtils;
 
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
+import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 
 final class ConnectionProviderBeanDefinitionParser extends BaseExtensionBeanDefinitionParser
 {
+
+    private final ConnectionProviderModel providerModel;
+
+    public ConnectionProviderBeanDefinitionParser(ConnectionProviderModel providerModel)
+    {
+        super(ConnectionProviderFactoryBean.class);
+        this.providerModel = providerModel;
+    }
+
+    @Override
+    public BeanDefinition parse(Element element, ParserContext parserContext)
+    {
+        BeanDefinition definition = super.parse(element, parserContext);
+
+        BeanDefinition parentDefinition = getParentBeanDefinition(element, parserContext);
+        parentDefinition.getPropertyValues().addPropertyValue("connectionProviderResolver", definition);
+
+        return null;
+    }
 
     @Override
     protected void doParse(BeanDefinitionBuilder builder, Element element)
     {
         parseConnectionProviderName(element, builder);
 
-        builder.addConstructorArgValue(configurationModel);
+        builder.addConstructorArgValue(providerModel);
         builder.addConstructorArgValue(toElementDescriptorBeanDefinition(element));
-        builder.addConstructorArgReference(OBJECT_MULE_CONTEXT);
-        builder.addConstructorArgReference(OBJECT_TIME_SUPPLIER);
     }
+
+    private BeanDefinition getParentBeanDefinition(Element element, ParserContext parserContext)
+    {
+        String parentBean = getParentBeanName(element);
+        if (StringUtils.isBlank(parentBean))
+        {
+            throw new IllegalStateException("No parent for " + SpringXMLUtils.elementToString(element));
+        }
+        return parserContext.getRegistry().getBeanDefinition(parentBean);
+    }
+
+    private String getParentBeanName(Element element)
+    {
+        return ((Element) element.getParentNode()).getAttribute("name");
+    }
+
 }

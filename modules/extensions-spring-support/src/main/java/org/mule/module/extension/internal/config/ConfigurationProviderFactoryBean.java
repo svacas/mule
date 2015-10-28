@@ -9,6 +9,7 @@ package org.mule.module.extension.internal.config;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.getResolverSet;
 import org.mule.api.MuleContext;
 import org.mule.api.config.ConfigurationException;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.runtime.ConfigurationProvider;
 import org.mule.extension.api.runtime.ExpirationPolicy;
@@ -17,6 +18,8 @@ import org.mule.module.extension.internal.runtime.ImmutableExpirationPolicy;
 import org.mule.module.extension.internal.runtime.config.ConfigurationProviderFactory;
 import org.mule.module.extension.internal.runtime.config.DefaultConfigurationProviderFactory;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
+import org.mule.module.extension.internal.runtime.resolver.StaticValueResolver;
+import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 import org.mule.time.TimeSupplier;
 
 import java.util.concurrent.TimeUnit;
@@ -32,10 +35,11 @@ import org.springframework.beans.factory.FactoryBean;
  */
 final class ConfigurationProviderFactoryBean implements FactoryBean<ConfigurationProvider<Object>>
 {
-
     private final ConfigurationProvider<Object> configurationProvider;
     private final ConfigurationProviderFactory configurationProviderFactory = new DefaultConfigurationProviderFactory();
     private final TimeSupplier timeSupplier;
+
+    private ValueResolver<ConnectionProvider> connectionProviderResolver = new StaticValueResolver<>(null);
 
     ConfigurationProviderFactoryBean(String name,
                                      ConfigurationModel configurationModel,
@@ -47,12 +51,13 @@ final class ConfigurationProviderFactoryBean implements FactoryBean<Configuratio
         ResolverSet resolverSet = getResolverSet(element, configurationModel.getParameterModels());
         try
         {
-            if (resolverSet.isDynamic())
+            if (resolverSet.isDynamic() || connectionProviderResolver.isDynamic())
             {
                 configurationProvider = configurationProviderFactory.createDynamicConfigurationProvider(
                         name,
                         configurationModel,
                         resolverSet,
+                        connectionProviderResolver,
                         getDynamicConfigPolicy(element));
             }
             else
@@ -61,6 +66,7 @@ final class ConfigurationProviderFactoryBean implements FactoryBean<Configuratio
                         name,
                         configurationModel,
                         resolverSet,
+                        connectionProviderResolver,
                         muleContext);
             }
 
@@ -114,4 +120,8 @@ final class ConfigurationProviderFactoryBean implements FactoryBean<Configuratio
                 timeSupplier);
     }
 
+    public void setConnectionProviderResolver(ValueResolver<ConnectionProvider> connectionProviderResolver)
+    {
+        this.connectionProviderResolver = connectionProviderResolver;
+    }
 }

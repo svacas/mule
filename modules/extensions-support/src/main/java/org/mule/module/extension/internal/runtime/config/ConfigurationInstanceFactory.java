@@ -9,11 +9,15 @@ package org.mule.module.extension.internal.runtime.config;
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.createInterceptors;
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleException;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.InterceptorFactory;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
+import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
+
+import java.util.Optional;
 
 /**
  * Reusable and thread-safe factory that creates instances of {@link ConfigurationInstance}
@@ -54,12 +58,13 @@ public final class ConfigurationInstanceFactory<T>
      * @return a {@link ConfigurationInstance}
      * @throws MuleException if an error is encountered
      */
-    public ConfigurationInstance<T> createConfiguration(String name, MuleEvent event) throws MuleException
+    public ConfigurationInstance<T> createConfiguration(String name, MuleEvent event, ValueResolver<ConnectionProvider> connectionProviderResolver) throws MuleException
     {
         return new LifecycleAwareConfigurationInstance<>(name,
                                                          configurationModel,
                                                          createConfigurationInstance(event),
-                                                         createInterceptors(configurationModel));
+                                                         createInterceptors(configurationModel),
+                                                         Optional.ofNullable(connectionProviderResolver.resolve(event)));
 
     }
 
@@ -72,12 +77,13 @@ public final class ConfigurationInstanceFactory<T>
      * @return a {@link ConfigurationInstance}
      * @throws MuleException if an error is encountered
      */
-    public ConfigurationInstance<T> createConfiguration(String name, ResolverSetResult resolverSetResult) throws MuleException
+    public ConfigurationInstance<T> createConfiguration(String name, ResolverSetResult resolverSetResult, Optional<ConnectionProvider> connectionProvider) throws MuleException
     {
         return new LifecycleAwareConfigurationInstance<>(name,
                                                          configurationModel,
                                                          createConfigurationInstance(resolverSetResult),
-                                                         createInterceptors(configurationModel));
+                                                         createInterceptors(configurationModel),
+                                                         connectionProvider);
 
     }
 

@@ -127,8 +127,8 @@ public class DefaultExtensionManagerTestCase extends AbstractMuleTestCase
         when(extensionModel2.getVersion()).thenReturn(EXTENSION2_VERSION);
 
         when(extension1ConfigurationModel.getName()).thenReturn(EXTENSION1_CONFIG_NAME);
-        when(extension1ConfigurationModel.getInstantiator().newInstance()).thenReturn(configInstance);
-        when(extension1ConfigurationModel.getInstantiator().getObjectType()).thenReturn((Class) configInstance.getClass());
+        when(extension1ConfigurationModel.getConfigurationFactory().newInstance()).thenReturn(configInstance);
+        when(extension1ConfigurationModel.getConfigurationFactory().getObjectType()).thenReturn((Class) configInstance.getClass());
         when(extension1ConfigurationModel.getExtensionModel()).thenReturn(extensionModel1);
         when(extension1ConfigurationModel.getInterceptorFactories()).thenReturn(emptyList());
 
@@ -268,7 +268,7 @@ public class DefaultExtensionManagerTestCase extends AbstractMuleTestCase
         when(parameterModel1.isRequired()).thenReturn(true);
 
         when(extension1ConfigurationModel.getParameterModels()).thenReturn(asList(parameterModel1, parameterModel1));
-        when(extension1ConfigurationModel.getInstantiator().newInstance()).thenReturn(configInstance);
+        when(extension1ConfigurationModel.getConfigurationFactory().newInstance()).thenReturn(configInstance);
     }
 
     private List<ExtensionModel> getTestExtensions()

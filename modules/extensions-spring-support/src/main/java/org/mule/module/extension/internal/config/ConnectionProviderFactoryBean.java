@@ -9,26 +9,38 @@ package org.mule.module.extension.internal.config;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.getResolverSet;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConnectionProviderModel;
+import org.mule.module.extension.internal.runtime.ObjectBuilder;
+import org.mule.module.extension.internal.runtime.config.ConnectionProviderObjectBuilder;
+import org.mule.module.extension.internal.runtime.resolver.ObjectBuilderValueResolver;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
+import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 
 import org.springframework.beans.factory.FactoryBean;
 
-public class ConnectionProviderFactoryBean implements FactoryBean<ConnectionProvider>
+public class ConnectionProviderFactoryBean implements FactoryBean<ValueResolver>
 {
 
     private final ConnectionProviderModel providerModel;
     private final ElementDescriptor element;
 
+    public ConnectionProviderFactoryBean(ConnectionProviderModel providerModel, ElementDescriptor element)
+    {
+        this.providerModel = providerModel;
+        this.element = element;
+    }
+
     @Override
-    public ConnectionProvider getObject() throws Exception
+    public ValueResolver getObject() throws Exception
     {
         ResolverSet resolverSet = getResolverSet(element, providerModel.getParameterModels());
+        ObjectBuilder<ConnectionProvider> builder = new ConnectionProviderObjectBuilder(providerModel, resolverSet);
+        return new ObjectBuilderValueResolver<>(builder);
     }
 
     @Override
     public Class<?> getObjectType()
     {
-        return ConnectionProvider.class;
+        return ValueResolver.class;
     }
 
     @Override

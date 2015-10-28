@@ -12,18 +12,21 @@ import org.mule.api.MuleException;
 import org.mule.api.MuleRuntimeException;
 import org.mule.api.lifecycle.Initialisable;
 import org.mule.api.lifecycle.Startable;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
+import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.ConfigurationProvider;
 import org.mule.extension.api.runtime.ConfigurationStats;
-import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.ExpirableConfigurationProvider;
 import org.mule.extension.api.runtime.ExpirationPolicy;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
+import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 import org.mule.util.collection.ImmutableListCollector;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
@@ -48,6 +51,7 @@ public final class DynamicConfigurationProvider<T> extends LifecycleAwareConfigu
 
     private final ConfigurationInstanceFactory<T> configurationInstanceFactory;
     private final ResolverSet resolverSet;
+    private final ValueResolver<ConnectionProvider> connectionProviderResolver;
     private final ExpirationPolicy expirationPolicy;
 
     private final Map<ResolverSetResult, ConfigurationInstance<T>> cache = new ConcurrentHashMap<>();
@@ -66,11 +70,13 @@ public final class DynamicConfigurationProvider<T> extends LifecycleAwareConfigu
     public DynamicConfigurationProvider(String name,
                                         ConfigurationModel configurationModel,
                                         ResolverSet resolverSet,
+                                        ValueResolver<ConnectionProvider> connectionProviderResolver,
                                         ExpirationPolicy expirationPolicy)
     {
         super(name, configurationModel);
         configurationInstanceFactory = new ConfigurationInstanceFactory<>(configurationModel, resolverSet);
         this.resolverSet = resolverSet;
+        this.connectionProviderResolver = connectionProviderResolver;
         this.expirationPolicy = expirationPolicy;
     }
 
@@ -88,7 +94,7 @@ public final class DynamicConfigurationProvider<T> extends LifecycleAwareConfigu
         try
         {
             ResolverSetResult result = resolverSet.resolve((MuleEvent) muleEvent);
-            return getConfiguration(result);
+            return getConfiguration(result, (MuleEvent) muleEvent);
         }
         catch (Exception e)
         {
@@ -96,7 +102,7 @@ public final class DynamicConfigurationProvider<T> extends LifecycleAwareConfigu
         }
     }
 
-    private ConfigurationInstance<T> getConfiguration(ResolverSetResult resolverSetResult) throws Exception
+    private ConfigurationInstance<T> getConfiguration(ResolverSetResult resolverSetResult, MuleEvent event) throws Exception
     {
         ConfigurationInstance<T> configuration;
         cacheReadLock.lock();
@@ -122,7 +128,7 @@ public final class DynamicConfigurationProvider<T> extends LifecycleAwareConfigu
             configuration = cache.get(resolverSetResult);
             if (configuration == null)
             {
-                configuration = createConfiguration(resolverSetResult);
+                configuration = createConfiguration(resolverSetResult, event);
                 cache.put(resolverSetResult, configuration);
             }
 
@@ -142,9 +148,13 @@ public final class DynamicConfigurationProvider<T> extends LifecycleAwareConfigu
         stats.updateLastUsed();
     }
 
-    private ConfigurationInstance<T> createConfiguration(ResolverSetResult result) throws MuleException
+    private ConfigurationInstance<T> createConfiguration(ResolverSetResult result, MuleEvent event) throws MuleException
     {
-        ConfigurationInstance<T> configuration = configurationInstanceFactory.createConfiguration(getName(), result);
+        ConfigurationInstance<T> configuration = configurationInstanceFactory.createConfiguration(
+                getName(),
+                result,
+                Optional.ofNullable(connectionProviderResolver.resolve(event)));
+
         registerConfiguration(configuration);
 
         return configuration;

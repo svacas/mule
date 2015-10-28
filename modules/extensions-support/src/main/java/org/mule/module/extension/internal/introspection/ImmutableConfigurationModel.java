@@ -29,14 +29,14 @@ final class ImmutableConfigurationModel extends AbstractInterceptableModel imple
 
     private final Supplier<ExtensionModel> extensionModelSupplier;
     private final List<ParameterModel> parameterModels;
-    private final ConfigurationFactory instantiator;
+    private final ConfigurationFactory configurationFactory;
 
     /**
      * Creates a new instance with the given state
      *
      * @param name                 the configuration's name
      * @param description          the configuration's description
-     * @param instantiator         the {@link ConfigurationFactory}. Cannot be {@code null}
+     * @param configurationFactory         the {@link ConfigurationFactory}. Cannot be {@code null}
      * @param parameterModels      a {@link List} with the configuration's {@link ParameterModel parameterModels}
      * @param modelProperties      A {@link Map} of custom properties which extend this model
      * @param interceptorFactories A {@link List} with the {@link InterceptorFactory} instances that should be applied to instances built from this model
@@ -45,18 +45,18 @@ final class ImmutableConfigurationModel extends AbstractInterceptableModel imple
     protected ImmutableConfigurationModel(String name,
                                           String description,
                                           Supplier<ExtensionModel> extensionModelSupplier,
-                                          ConfigurationFactory instantiator,
+                                          ConfigurationFactory configurationFactory,
                                           List<ParameterModel> parameterModels,
                                           Map<String, Object> modelProperties,
                                           List<InterceptorFactory> interceptorFactories)
     {
         super(name, description, modelProperties, interceptorFactories);
         validateRepeatedNames(parameterModels);
-        checkArgument(instantiator != null, "instantiator cannot be null");
+        checkArgument(configurationFactory != null, "instantiator cannot be null");
 
         this.extensionModelSupplier = extensionModelSupplier;
         this.parameterModels = immutableList(parameterModels);
-        this.instantiator = instantiator;
+        this.configurationFactory = configurationFactory;
     }
 
     /**
@@ -72,9 +72,9 @@ final class ImmutableConfigurationModel extends AbstractInterceptableModel imple
      * {@inheritDoc}
      */
     @Override
-    public ConfigurationFactory getInstantiator()
+    public ConfigurationFactory getConfigurationFactory()
     {
-        return instantiator;
+        return configurationFactory;
     }
 
     /**

@@ -57,7 +57,7 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
     @Before
     public void before() throws Exception
     {
-        when(configurationModel.getInstantiator().newInstance()).thenReturn(new TestConfig());
+        when(configurationModel.getConfigurationFactory().newInstance()).thenReturn(new TestConfig());
         when(configurationModel.getModelProperty(ParameterGroupModelProperty.KEY)).thenReturn(null);
         when(configurationModel.getInterceptorFactories()).thenReturn(asList(() -> interceptor1, () -> interceptor2));
 

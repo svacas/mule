@@ -50,7 +50,6 @@ public final class LifecycleAwareConfigurationInstance<T> extends AbstractInterc
     private final T value;
     private final Optional<ConnectionProvider> connectionProvider;
 
-
     private ConfigurationStats configurationStats;
 
     @Inject
@@ -64,12 +63,17 @@ public final class LifecycleAwareConfigurationInstance<T> extends AbstractInterc
      * @param value        the actual configuration instance
      * @param interceptors the {@link List} of {@link Interceptor interceptors} that applies
      */
-    public LifecycleAwareConfigurationInstance(String name, ConfigurationModel model, T value, List<Interceptor> interceptors)
+    public LifecycleAwareConfigurationInstance(String name,
+                                               ConfigurationModel model,
+                                               T value,
+                                               List<Interceptor> interceptors,
+                                               Optional<ConnectionProvider> connectionProvider)
     {
         super(interceptors);
         this.name = name;
         this.model = model;
         this.value = value;
+        this.connectionProvider = connectionProvider;
     }
 
     /**

@@ -7,10 +7,12 @@
 package org.mule.module.extension.internal.runtime.config;
 
 import org.mule.api.MuleContext;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.runtime.ConfigurationProvider;
 import org.mule.module.extension.internal.runtime.DynamicConfigPolicy;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
+import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 
 /**
  * A factory which creates instances of {@link ConfigurationProvider}
@@ -35,6 +37,7 @@ public interface ConfigurationProviderFactory
             String name,
             ConfigurationModel configurationModel,
             ResolverSet resolverSet,
+            ValueResolver<ConnectionProvider> connectionProviderResolver,
             DynamicConfigPolicy dynamicConfigPolicy) throws Exception;
 
 
@@ -53,5 +56,6 @@ public interface ConfigurationProviderFactory
             String name,
             ConfigurationModel configurationModel,
             ResolverSet resolverSet,
+            ValueResolver<ConnectionProvider> connectionProviderResolver,
             MuleContext muleContext) throws Exception;
 }

@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 import static org.mule.module.extension.internal.ExtensionProperties.CONNECTION_PARAM;
 import org.mule.module.extension.internal.runtime.OperationContextAdapter;
 import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreClient;
-import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreClientConnectionProvider;
+import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConnectionProvider;
 import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConnectorConfig;
 import org.mule.tck.junit4.AbstractMuleContextTestCase;
 import org.mule.util.concurrent.Latch;
@@ -51,7 +51,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     private PetStoreConnectorConfig config;
 
     private ConnectionInterceptor<PetStoreConnectorConfig, PetStoreClient> interceptor;
-    private PetStoreClientConnectionProvider connectionHandler = spy(new PetStoreClientConnectionProvider());
+    private PetStoreConnectionProvider connectionHandler = spy(new PetStoreConnectionProvider());
 
     @Before
     public void before() throws Exception
@@ -91,7 +91,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     public void getConnectionConcurrentlyAndConnectOnlyOnce() throws Exception
     {
         PetStoreClient mockConnection = mock(PetStoreClient.class);
-        connectionHandler = mock(PetStoreClientConnectionProvider.class);
+        connectionHandler = mock(PetStoreConnectionProvider.class);
         before();
 
         Latch latch = new Latch();
@@ -211,7 +211,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
 
     private Exception setConnectionHandlerWhichFailsToDisconnect() throws Exception
     {
-        connectionHandler = mock(PetStoreClientConnectionProvider.class);
+        connectionHandler = mock(PetStoreConnectionProvider.class);
         final Exception exception = new RuntimeException();
         doThrow(exception).when(connectionHandler).disconnect(Mockito.any(PetStoreClient.class));
         when(connectionHandler.connect(config)).thenReturn(mock(PetStoreClient.class));
@@ -222,7 +222,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
 
     private Exception setConnectionHandlerWhichFailsToStop() throws Exception
     {
-        connectionHandler = mock(PetStoreClientConnectionProvider.class);
+        connectionHandler = mock(PetStoreConnectionProvider.class);
         final Exception exception = new RuntimeException();
         doThrow(exception).when(connectionHandler).stop();
         before();

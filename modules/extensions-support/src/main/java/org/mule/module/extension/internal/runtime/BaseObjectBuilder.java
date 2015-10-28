@@ -6,15 +6,24 @@
  */
 package org.mule.module.extension.internal.runtime;
 
+import static org.mule.module.extension.internal.util.IntrospectionUtils.getField;
 import static org.mule.util.Preconditions.checkArgument;
 import static org.springframework.util.ReflectionUtils.setField;
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleException;
+import org.mule.extension.api.introspection.EnrichableModel;
+import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
+import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
 import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
+import org.mule.module.extension.internal.util.GroupValueSetter;
 import org.mule.module.extension.internal.util.MuleExtensionUtils;
+import org.mule.module.extension.internal.util.SingleValueSetter;
+import org.mule.module.extension.internal.util.ValueSetter;
+import org.mule.util.collection.ImmutableListCollector;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -28,7 +37,17 @@ import java.util.Map;
 public abstract class BaseObjectBuilder<T> implements ObjectBuilder<T>
 {
 
+    protected final ResolverSet resolverSet;
     private final Map<Field, ValueResolver<Object>> resolvers = new HashMap<>();
+    private final List<ValueSetter> singleValueSetters;
+    private final List<ValueSetter> groupValueSetters;
+
+    public BaseObjectBuilder(Class<?> prototypeClass, EnrichableModel model, ResolverSet resolverSet)
+    {
+        this.resolverSet = resolverSet;
+        singleValueSetters = createSingleValueSetters(prototypeClass, resolverSet);
+        groupValueSetters = GroupValueSetter.settersFor(model);
+    }
 
     /**
      * Returns the instance to be returned before the properties have
@@ -73,5 +92,36 @@ public abstract class BaseObjectBuilder<T> implements ObjectBuilder<T>
         }
 
         return object;
+    }
+
+    public T build(ResolverSetResult result) throws MuleException
+    {
+        T configuration = instantiateObject();
+
+        setValues(configuration, result, groupValueSetters);
+        setValues(configuration, result, singleValueSetters);
+
+        return configuration;
+    }
+
+    private List<ValueSetter> createSingleValueSetters(Class<?> prototypeClass, ResolverSet resolverSet)
+    {
+        return resolverSet.getResolvers().keySet().stream()
+                .map(parameterModel -> {
+                    Field field = getField(prototypeClass, parameterModel);
+
+                    // if no field, then it means this is a group attribute
+                    return field != null ? new SingleValueSetter(parameterModel, field) : null;
+                })
+                .filter(field -> field != null)
+                .collect(new ImmutableListCollector<>());
+    }
+
+    private void setValues(Object target, ResolverSetResult result, List<ValueSetter> setters) throws MuleException
+    {
+        for (ValueSetter setter : setters)
+        {
+            setter.set(target, result);
+        }
     }
 }

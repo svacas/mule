@@ -10,11 +10,12 @@ import org.mule.api.MuleContext;
 import org.mule.api.MuleException;
 import org.mule.api.lifecycle.InitialisationException;
 import org.mule.api.lifecycle.Lifecycle;
+import org.mule.extension.annotation.api.Parameter;
 import org.mule.extension.api.connection.ConnectionProvider;
 
 import javax.inject.Inject;
 
-public class PetStoreClientConnectionProvider implements ConnectionProvider<PetStoreConnectorConfig, PetStoreClient>, Lifecycle
+public class PetStoreConnectionProvider implements ConnectionProvider<PetStoreConnector, PetStoreClient>, Lifecycle
 {
 
     private int initialise, start, stop, dispose = 0;
@@ -22,10 +23,16 @@ public class PetStoreClientConnectionProvider implements ConnectionProvider<PetS
     @Inject
     private MuleContext muleContext;
 
+    @Parameter
+    private String username;
+
+    @Parameter
+    private String password;
+
     @Override
-    public PetStoreClient connect(PetStoreConnectorConfig config)
+    public PetStoreClient connect(PetStoreConnector config)
     {
-        return new PetStoreClient(config.getUsername(), config.getPassword());
+        return new PetStoreClient(username, password);
     }
 
     @Override
@@ -81,5 +88,15 @@ public class PetStoreClientConnectionProvider implements ConnectionProvider<PetS
     public MuleContext getMuleContext()
     {
         return muleContext;
+    }
+
+    public String getUsername()
+    {
+        return username;
+    }
+
+    public String getPassword()
+    {
+        return password;
     }
 }

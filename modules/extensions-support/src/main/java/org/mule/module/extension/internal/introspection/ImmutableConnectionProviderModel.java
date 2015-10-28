@@ -6,27 +6,41 @@
  */
 package org.mule.module.extension.internal.introspection;
 
+import static org.mule.util.CollectionUtils.immutableList;
 import static org.mule.util.Preconditions.checkArgument;
 import org.mule.extension.api.introspection.ConnectionProviderFactory;
 import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.extension.api.introspection.ParameterModel;
 
 import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
-
-final class ImmutableConnectionProviderModel implements ConnectionProviderModel
+final class ImmutableConnectionProviderModel extends AbstractImmutableModel implements ConnectionProviderModel
 {
-    private final String name;
-    private final List<ParameterModel> parameterModels;
-    private final ConnectionProviderFactory factory;
 
-    public ImmutableConnectionProviderModel(String name, List<ParameterModel> parameterModels, ConnectionProviderFactory factory)
+    private final List<ParameterModel> parameterModels;
+    private final ConnectionProviderFactory connectionProviderFactory;
+    private final Class<?> configurationType;
+    private final Class<?> connectionType;
+
+    protected ImmutableConnectionProviderModel(String name,
+                                               String description,
+                                               Class<?> configurationType,
+                                               Class<?> connectionType,
+                                               ConnectionProviderFactory connectionProviderFactory,
+                                               List<ParameterModel> parameterModels,
+                                               Map<String, Object> modelProperties)
     {
-        checkArgument(!StringUtils.isBlank(name), "name attribute cannot be null or blank");
-        this.name = name;
-        this.parameterModels = parameterModels;
-        this.factory = factory;
+        super(name, description, modelProperties);
+        this.parameterModels = immutableList(parameterModels);
+
+        checkArgument(connectionProviderFactory != null, "connectionProviderFactory cannot be null");
+        checkArgument(configurationType != null, "configurationType cannot be null");
+        checkArgument(connectionType != null, "connectionType cannot be null");
+
+        this.connectionProviderFactory = connectionProviderFactory;
+        this.configurationType = configurationType;
+        this.connectionType = connectionType;
     }
 
     /**
@@ -42,17 +56,26 @@ final class ImmutableConnectionProviderModel implements ConnectionProviderModel
      * {@inheritDoc}
      */
     @Override
-    public ConnectionProviderFactory getFactory()
+    public ConnectionProviderFactory getConnectionProviderFactory()
     {
-        return factory;
+        return connectionProviderFactory;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getName()
+    public Class<?> getConfigurationType()
     {
-        return name;
+        return configurationType;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getConnectionType()
+    {
+        return connectionType;
     }
 }

@@ -57,8 +57,8 @@ public class DynamicConfigurationProviderTestCase extends AbstractConfigurationP
     @Before
     public void before() throws Exception
     {
-        when(configurationModel.getInstantiator().getObjectType()).thenReturn(MODULE_CLASS);
-        when(configurationModel.getInstantiator().newInstance()).thenAnswer(invocation -> MODULE_CLASS.newInstance());
+        when(configurationModel.getConfigurationFactory().getObjectType()).thenReturn(MODULE_CLASS);
+        when(configurationModel.getConfigurationFactory().newInstance()).thenAnswer(invocation -> MODULE_CLASS.newInstance());
         when(configurationModel.getModelProperty(anyString())).thenReturn(null);
         when(configurationModel.getInterceptorFactories()).thenReturn(ImmutableList.of());
 

@@ -23,12 +23,18 @@ import org.mule.extension.annotation.api.Extension;
 import org.mule.extension.annotation.api.ExtensionOf;
 import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.Parameter;
+import org.mule.extension.annotation.api.connector.Providers;
 import org.mule.extension.annotation.api.param.Optional;
+import org.mule.extension.api.connection.ConnectionProvider;
+import org.mule.extension.api.exception.IllegalModelDefinitionException;
+import org.mule.extension.api.introspection.ConnectionProviderFactory;
 import org.mule.extension.api.introspection.DataType;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDescriptor;
+import org.mule.extension.api.introspection.declaration.fluent.ConnectionProviderDescriptor;
 import org.mule.extension.api.introspection.declaration.fluent.DeclarationDescriptor;
 import org.mule.extension.api.introspection.declaration.fluent.Descriptor;
+import org.mule.extension.api.introspection.declaration.fluent.HasModelProperties;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDescriptor;
 import org.mule.extension.api.introspection.declaration.fluent.ParameterDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.ParameterDescriptor;
@@ -51,6 +57,8 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import org.springframework.core.ResolvableType;
 
 /**
  * Implementation of {@link Describer} which generates a {@link Descriptor} by
@@ -92,6 +100,7 @@ public final class AnnotationsBasedDescriber implements Describer
 
         declareConfigurations(declaration, extensionType);
         declareOperations(declaration, extensionType);
+        declareConnectionProviders(declaration, extensionType);
 
         return declaration;
     }
@@ -136,25 +145,25 @@ public final class AnnotationsBasedDescriber implements Describer
         configuration.createdWith(new TypeAwareConfigurationFactory(configurationType))
                 .withModelProperty(ImplementingTypeModelProperty.KEY, new ImplementingTypeModelProperty(configurationType));
 
-        declareConfigurationParameters(configurationType, configuration);
+        declareAnnotatedParameters(configurationType, configuration, configuration.with());
     }
 
-    private void declareConfigurationParameters(Class<?> extensionType, ConfigurationDescriptor configuration)
+    private void declareAnnotatedParameters(Class<?> annotatedType, Descriptor descriptor, WithParameters with)
     {
-        declareSingleParameters(extensionType, configuration.with());
-        List<ParameterGroup> groups = declareConfigurationParametersGroups(extensionType, configuration);
-        if (!CollectionUtils.isEmpty(groups))
+        declareSingleParameters(annotatedType, with);
+        List<ParameterGroup> groups = declareConfigurationParametersGroups(annotatedType, with);
+        if (!CollectionUtils.isEmpty(groups) && descriptor instanceof HasModelProperties)
         {
-            configuration.withModelProperty(ParameterGroupModelProperty.KEY, new ParameterGroupModelProperty(groups));
+            ((HasModelProperties) descriptor).withModelProperty(ParameterGroupModelProperty.KEY, new ParameterGroupModelProperty(groups));
         }
     }
 
-    private List<ParameterGroup> declareConfigurationParametersGroups(Class<?> extensionType, ConfigurationDescriptor configuration)
+    private List<ParameterGroup> declareConfigurationParametersGroups(Class<?> annotatedType, WithParameters with)
     {
         List<ParameterGroup> groups = new LinkedList<>();
-        for (Field field : getParameterGroupFields(extensionType))
+        for (Field field : getParameterGroupFields(annotatedType))
         {
-            Set<ParameterDescriptor> parameters = declareSingleParameters(field.getType(), configuration.with());
+            Set<ParameterDescriptor> parameters = declareSingleParameters(field.getType(), with);
 
             if (!parameters.isEmpty())
             {
@@ -169,7 +178,7 @@ public final class AnnotationsBasedDescriber implements Describer
                                                                      parameter.getType().getRawType()));
                 }
 
-                List<ParameterGroup> childGroups = declareConfigurationParametersGroups(field.getType(), configuration);
+                List<ParameterGroup> childGroups = declareConfigurationParametersGroups(field.getType(), with);
                 if (!CollectionUtils.isEmpty(childGroups))
                 {
                     group.addModelProperty(ParameterGroupModelProperty.KEY, new ParameterGroupModelProperty(childGroups));
@@ -215,14 +224,12 @@ public final class AnnotationsBasedDescriber implements Describer
     private void declareOperations(DeclarationDescriptor declaration, Class<?> extensionType)
     {
         Operations operations = extensionType.getAnnotation(Operations.class);
-        if (operations == null)
+        if (operations != null)
         {
-            throw new IllegalArgumentException(String.format("Extension of type %s does not declare operations", extensionType.getName()));
-        }
-
-        for (Class<?> actingClass : operations.value())
-        {
-            declareOperation(declaration, actingClass);
+            for (Class<?> actingClass : operations.value())
+            {
+                declareOperation(declaration, actingClass);
+            }
         }
     }
 
@@ -237,6 +244,40 @@ public final class AnnotationsBasedDescriber implements Describer
             declareOperationParameters(method, operation);
             calculateExtendedTypes(actingClass, method, operation);
         }
+    }
+
+    private void declareConnectionProviders(DeclarationDescriptor declaration, Class<?> extensionType)
+    {
+        Providers providers = extensionType.getAnnotation(Providers.class);
+        if (providers != null)
+        {
+            for (Class<?> providerClass : providers.value())
+            {
+                declareConnectionProvider(declaration, providerClass);
+            }
+        }
+    }
+
+    private <T> void declareConnectionProvider(DeclarationDescriptor declaration, Class<T> providerClass)
+    {
+        ConnectionProviderFactory factory = new DefaultConnectionProviderFactory<>(declaration, providerClass);
+        ConnectionProvider provider = factory.newInstance();
+        ResolvableType[] providerGenerics = ResolvableType.forClass(provider.getClass()).getGenerics();
+
+        if (providerGenerics.length != 2)
+        {
+            throw new IllegalModelDefinitionException(String.format("Connection provider class '%s' was expected to have 2 generic types " +
+                                                                    "(one for the config type and another for the connection type) but %d were found",
+                                                                    providerClass.getName(), providerGenerics.length));
+        }
+
+        ConnectionProviderDescriptor providerDescriptor = declaration.withConnectionProvider(provider.getName())
+                .describedAs(provider.getDescription())
+                .createdWith(factory)
+                .forConfigsOfType(providerGenerics[0].getRawClass())
+                .whichGivesConnectionsOfType(providerGenerics[1].getRawClass());
+
+        declareAnnotatedParameters(providerClass, providerDescriptor, providerDescriptor.with());
     }
 
     private void calculateExtendedTypes(Class<?> actingClass, Method method, OperationDescriptor operation)
