@@ -6,6 +6,7 @@
  */
 package org.mule.module.extension.internal.util;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.EMPTY;
 import static org.mule.extension.api.introspection.ExpressionSupport.SUPPORTED;
 import static org.mule.module.extension.internal.introspection.MuleExtensionAnnotationParser.getMemberName;
@@ -35,6 +36,7 @@ import java.lang.reflect.AccessibleObject;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -149,6 +151,26 @@ public class IntrospectionUtils
         }
 
         return DataType.of(rawClass, toRawTypes(generics));
+    }
+
+    public static List<Class<?>> getInterfaceGenerics(Class<?> type, Class<?> implementedInterface)
+    {
+        ResolvableType interfaceType = null;
+        for (ResolvableType iType : ResolvableType.forClass(type).getInterfaces())
+        {
+            if (iType.getRawClass().equals(implementedInterface))
+            {
+                interfaceType = iType;
+                break;
+            }
+        }
+
+        if (interfaceType == null)
+        {
+            throw new IllegalArgumentException(String.format("Class '%s' does not implement the '%s' interface", type.getName(), implementedInterface.getName()));
+        }
+
+        return Arrays.stream(interfaceType.getGenerics()).map(ResolvableType::getRawClass).collect(toList());
     }
 
     private static boolean isOperation(Class<?> rawClass)

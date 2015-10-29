@@ -23,11 +23,11 @@ import org.mule.extension.annotation.api.Extension;
 import org.mule.extension.annotation.api.ExtensionOf;
 import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.Parameter;
+import org.mule.extension.annotation.api.connector.Provider;
 import org.mule.extension.annotation.api.connector.Providers;
 import org.mule.extension.annotation.api.param.Optional;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.exception.IllegalModelDefinitionException;
-import org.mule.extension.api.introspection.ConnectionProviderFactory;
 import org.mule.extension.api.introspection.DataType;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDescriptor;
@@ -57,8 +57,6 @@ import java.lang.reflect.Method;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import org.springframework.core.ResolvableType;
 
 /**
  * Implementation of {@link Describer} which generates a {@link Descriptor} by
@@ -260,22 +258,27 @@ public final class AnnotationsBasedDescriber implements Describer
 
     private <T> void declareConnectionProvider(DeclarationDescriptor declaration, Class<T> providerClass)
     {
-        ConnectionProviderFactory factory = new DefaultConnectionProviderFactory<>(declaration, providerClass);
-        ConnectionProvider provider = factory.newInstance();
-        ResolvableType[] providerGenerics = ResolvableType.forClass(provider.getClass()).getGenerics();
+        Provider providerAnnotation = providerClass.getAnnotation(Provider.class);
+        if (providerAnnotation == null)
+        {
+            throw new IllegalModelDefinitionException(String.format("Connection provider class '%s' is missing the '%s' annotation",
+                                                                    providerClass.getName(), Provider.class.getName()));
+        }
 
-        if (providerGenerics.length != 2)
+        List<Class<?>> providerGenerics = IntrospectionUtils.getInterfaceGenerics(providerClass, ConnectionProvider.class);
+
+        if (providerGenerics.size() != 2)
         {
             throw new IllegalModelDefinitionException(String.format("Connection provider class '%s' was expected to have 2 generic types " +
                                                                     "(one for the config type and another for the connection type) but %d were found",
-                                                                    providerClass.getName(), providerGenerics.length));
+                                                                    providerClass.getName(), providerGenerics.size()));
         }
 
-        ConnectionProviderDescriptor providerDescriptor = declaration.withConnectionProvider(provider.getName())
-                .describedAs(provider.getDescription())
-                .createdWith(factory)
-                .forConfigsOfType(providerGenerics[0].getRawClass())
-                .whichGivesConnectionsOfType(providerGenerics[1].getRawClass());
+        ConnectionProviderDescriptor providerDescriptor = declaration.withConnectionProvider(providerAnnotation.name())
+                .describedAs(providerAnnotation.description())
+                .createdWith(new DefaultConnectionProviderFactory<>(declaration, providerClass))
+                .forConfigsOfType(providerGenerics.get(0))
+                .whichGivesConnectionsOfType(providerGenerics.get(1));
 
         declareAnnotatedParameters(providerClass, providerDescriptor, providerDescriptor.with());
     }

@@ -6,40 +6,66 @@
  */
 package org.mule.module.extension.internal.runtime.config;
 
+import static org.hamcrest.CoreMatchers.any;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
 import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.withSettings;
 import org.mule.api.config.MuleProperties;
+import org.mule.api.context.MuleContextAware;
 import org.mule.api.lifecycle.Disposable;
 import org.mule.api.lifecycle.Initialisable;
 import org.mule.api.lifecycle.Lifecycle;
 import org.mule.api.lifecycle.Startable;
 import org.mule.api.lifecycle.Stoppable;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.module.extension.internal.AbstractInterceptableContractTestCase;
 import org.mule.tck.size.SmallTest;
 import org.mule.tck.util.TestTimeSupplier;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.junit.runners.Parameterized;
+import org.junit.runners.Parameterized.Parameters;
 
 @SmallTest
-@RunWith(MockitoJUnitRunner.class)
+@RunWith(Parameterized.class)
 public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableContractTestCase<LifecycleAwareConfigurationInstance>
 {
 
     private static final String NAME = "name";
 
-    @Mock
-    private ConfigurationModel configurationModel;
+    @Parameters(name = "{0}")
+    public static Collection<Object[]> data()
+    {
+        return Arrays.asList(new Object[][] {
+                                     {"With provider", mock(ConnectionProvider.class, withSettings().extraInterfaces(Lifecycle.class, MuleContextAware.class))},
+                                     {"Without provider", null}}
+        );
+    }
 
-    @Mock
-    private Lifecycle value;
+    private ConfigurationModel configurationModel = mock(ConfigurationModel.class);
+
+    private Lifecycle value = mock(Lifecycle.class);
+
+    private String name;
+    private Optional<ConnectionProvider> connectionProvider;
+
+    public LifecycleAwareConfigurationTestCase(String name, ConnectionProvider connectionProvider)
+    {
+        this.name = name;
+        this.connectionProvider = Optional.ofNullable(connectionProvider);
+    }
 
     private TestTimeSupplier timeSupplier = new TestTimeSupplier(System.currentTimeMillis());
 
@@ -50,18 +76,26 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
         super.before();
         muleContext.getRegistry().registerObject(MuleProperties.OBJECT_TIME_SUPPLIER, timeSupplier);
     }
-    
+
     @Override
     protected LifecycleAwareConfigurationInstance createInterceptable()
     {
-        return new LifecycleAwareConfigurationInstance(NAME, configurationModel, value, getInterceptors());
+        return new LifecycleAwareConfigurationInstance(NAME, configurationModel, value, getInterceptors(), connectionProvider);
     }
-    
+
     @Test
     public void valueInjected() throws Exception
     {
         interceptable.initialise();
         verify(injector).inject(value);
+        if (connectionProvider.isPresent())
+        {
+            verify(injector).inject(connectionProvider.get());
+        }
+        else
+        {
+            verify(injector, never()).inject(any(ConnectionProvider.class));
+        }
     }
 
     @Test
@@ -69,7 +103,10 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     {
         interceptable.initialise();
         verify((Initialisable) value).initialise();
-        verify((Initialisable) value).initialise();
+        if (connectionProvider.isPresent())
+        {
+            verify((Initialisable) connectionProvider.get()).initialise();
+        }
     }
 
     @Test
@@ -77,6 +114,10 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     {
         interceptable.start();
         verify((Startable) value).start();
+        if (connectionProvider.isPresent())
+        {
+            verify((Startable) connectionProvider.get()).start();
+        }
     }
 
     @Test
@@ -84,6 +125,11 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     {
         interceptable.stop();
         verify((Stoppable) value).stop();
+        if (connectionProvider.isPresent())
+        {
+            verify((Stoppable) connectionProvider.get()).stop();
+        }
+
     }
 
     @Test
@@ -91,6 +137,10 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     {
         interceptable.dispose();
         verify((Disposable) value).dispose();
+        if (connectionProvider.isPresent())
+        {
+            verify((Disposable) connectionProvider.get()).dispose();
+        }
     }
 
     @Test

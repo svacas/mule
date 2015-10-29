@@ -12,6 +12,7 @@ import org.mule.api.context.MuleContextAware;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Optional;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
@@ -47,6 +48,7 @@ public class LifecycleUtils
      */
     public static void initialiseIfNeeded(Object object, MuleContext muleContext) throws InitialisationException
     {
+        object = unwrap(object);
         if (muleContext != null && object instanceof MuleContextAware)
         {
             ((MuleContextAware) object).setMuleContext(muleContext);
@@ -87,6 +89,7 @@ public class LifecycleUtils
      */
     public static void startIfNeeded(Object object) throws MuleException
     {
+        object = unwrap(object);
         if (object instanceof Startable)
         {
             ((Startable) object).start();
@@ -195,6 +198,7 @@ public class LifecycleUtils
 
         for (Object object : objects)
         {
+            object = unwrap(object);
             if (object == null)
             {
                 continue;
@@ -231,5 +235,13 @@ public class LifecycleUtils
                 }
             }
         }
+    }
+
+    private static Object unwrap(Object value) {
+        if (value instanceof Optional) {
+            return ((Optional) value).get();
+        }
+
+        return value;
     }
 }

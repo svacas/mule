@@ -13,20 +13,23 @@ import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDecl
 import org.mule.extension.api.introspection.declaration.fluent.Declaration;
 import org.mule.extension.api.runtime.InterceptorFactory;
 import org.mule.module.extension.internal.model.AbstractAnnotatedModelEnricher;
+import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
 
 /**
  * Traverses all the {@link ConfigurationDeclaration configuration declarations} in the supplied
  * {@link DescribingContext} looking for those which were generated from a class annotated with
  * {@link ConnectionType}.
- * <p/>
+ * <p>
  * The matching {@link ConfigurationDeclaration declarations} are enriched with a {@link InterceptorFactory}
  * that creates instances of {@link ConnectionInterceptor}
- * <p/>
+ * <p>
  * {@link #extractAnnotation(BaseDeclaration, Class)} is used to determine if a {@link ConfigurationDeclaration} is
  * annotated with {@link ConnectionType} or not.
  *
  * @since 4.0
  */
+//TODO: rephrase javadoc
+//TODO: movel interceptor to another enricher over the operations
 public final class ConnectorModelEnricher extends AbstractAnnotatedModelEnricher
 {
 
@@ -38,7 +41,8 @@ public final class ConnectorModelEnricher extends AbstractAnnotatedModelEnricher
             ConnectionType connectionTypeAnnotation = extractAnnotation(configurationDeclaration, ConnectionType.class);
             if (connectionTypeAnnotation != null)
             {
-                configurationDeclaration.addInterceptorFactory(ConnectionInterceptor::new);
+                configurationDeclaration.addModelProperty(ConnectorModelProperty.KEY, new ConnectorModelProperty(connectionTypeAnnotation.value()));
+                //configurationDeclaration.addInterceptorFactory(ConnectionInterceptor::new);
             }
         });
     }

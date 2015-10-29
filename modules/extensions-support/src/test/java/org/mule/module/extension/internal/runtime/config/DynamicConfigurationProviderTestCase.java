@@ -24,6 +24,7 @@ import org.mule.module.extension.HeisenbergExtension;
 import org.mule.module.extension.internal.runtime.ImmutableExpirationPolicy;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
+import org.mule.module.extension.internal.runtime.resolver.StaticValueResolver;
 import org.mule.tck.size.SmallTest;
 import org.mule.util.collection.ImmutableListCollector;
 
@@ -70,6 +71,7 @@ public class DynamicConfigurationProviderTestCase extends AbstractConfigurationP
         provider = new DynamicConfigurationProvider(CONFIG_NAME,
                                                     configurationModel,
                                                     resolverSet,
+                                                    new StaticValueResolver<>(null),
                                                     expirationPolicy);
 
         super.before();

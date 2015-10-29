@@ -22,6 +22,7 @@ import org.mule.extension.annotation.api.capability.Xml;
 import org.mule.extension.annotation.api.connector.Providers;
 import org.mule.extension.annotation.api.param.Optional;
 import org.mule.extension.api.ExtensionManager;
+import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConnectionProvider;
 
 import java.math.BigDecimal;
 import java.util.LinkedList;
@@ -35,7 +36,7 @@ import javax.inject.Inject;
 @Operations({HeisenbergOperations.class, MoneyLaunderingOperation.class})
 @Xml(schemaLocation = HeisenbergExtension.SCHEMA_LOCATION, namespace = HeisenbergExtension.NAMESPACE, schemaVersion = HeisenbergExtension.SCHEMA_VERSION)
 @Extensible(alias = "heisenberg-empire")
-@Providers()
+@Providers(PetStoreConnectionProvider.class)
 public class HeisenbergExtension implements Lifecycle, MuleContextAware
 {
 

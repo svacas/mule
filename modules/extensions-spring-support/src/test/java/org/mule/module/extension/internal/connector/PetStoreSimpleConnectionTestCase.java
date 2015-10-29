@@ -13,7 +13,6 @@ import static org.junit.Assert.assertThat;
 import org.mule.api.MuleEvent;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreClient;
-import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConfig;
 import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConnector;
 import org.mule.tck.junit4.ExtensionsFunctionalTestCase;
 
@@ -39,7 +38,7 @@ public class PetStoreSimpleConnectionTestCase extends ExtensionsFunctionalTestCa
     @Test
     public void getPets() throws Exception
     {
-        ConfigurationInstance<PetStoreConfig> config = muleContext.getExtensionManager().getConfiguration("petstore", getTestEvent(""));
+        ConfigurationInstance<PetStoreConnector> config = muleContext.getExtensionManager().getConfiguration("petstore", getTestEvent(""));
         assertThat(config, is(notNullValue()));
 
         MuleEvent response = runFlow("getPets");

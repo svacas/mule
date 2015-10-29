@@ -8,10 +8,10 @@ package org.mule.module.extension.internal.runtime.config;
 
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConnectionProviderModel;
-import org.mule.module.extension.internal.runtime.BaseObjectBuilder;
+import org.mule.module.extension.internal.runtime.ParametrizedObjectBuilder;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 
-public class ConnectionProviderObjectBuilder extends BaseObjectBuilder<ConnectionProvider>
+public class ConnectionProviderObjectBuilder extends ParametrizedObjectBuilder<ConnectionProvider>
 {
 
     private final ConnectionProviderModel providerModel;

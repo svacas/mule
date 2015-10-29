@@ -9,8 +9,8 @@ package org.mule.module.extension.internal.runtime.config;
 import org.mule.api.MuleEvent;
 import org.mule.api.MuleException;
 import org.mule.extension.api.introspection.ConfigurationModel;
-import org.mule.module.extension.internal.runtime.BaseObjectBuilder;
 import org.mule.module.extension.internal.runtime.ObjectBuilder;
+import org.mule.module.extension.internal.runtime.ParametrizedObjectBuilder;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 
 /**
@@ -24,7 +24,7 @@ import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
  *
  * @since 3.7.0
  */
-public final class ConfigurationObjectBuilder<T> extends BaseObjectBuilder<T>
+public final class ConfigurationObjectBuilder<T> extends ParametrizedObjectBuilder<T>
 {
 
     private final ConfigurationModel configurationModel;

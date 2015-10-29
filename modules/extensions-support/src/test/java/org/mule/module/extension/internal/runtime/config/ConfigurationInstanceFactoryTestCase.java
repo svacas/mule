@@ -21,6 +21,7 @@ import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.Interceptable;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.Interceptor;
+import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
 import org.mule.module.extension.internal.model.property.ParameterGroupModelProperty;
 import org.mule.module.extension.internal.runtime.executor.ConfigurationObjectBuilderTestCase;
 import org.mule.module.extension.internal.runtime.executor.ConfigurationObjectBuilderTestCase.TestConfig;
@@ -28,6 +29,8 @@ import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
+
+import java.util.Optional;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +40,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
 @RunWith(MockitoJUnitRunner.class)
+//TODO: Test implicit provider scenarios
 public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
 {
 
@@ -59,6 +63,7 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
     {
         when(configurationModel.getConfigurationFactory().newInstance()).thenReturn(new TestConfig());
         when(configurationModel.getModelProperty(ParameterGroupModelProperty.KEY)).thenReturn(null);
+        when(configurationModel.getModelProperty(ConnectorModelProperty.KEY)).thenReturn(null);
         when(configurationModel.getInterceptorFactories()).thenReturn(asList(() -> interceptor1, () -> interceptor2));
 
         resolverSet = ConfigurationObjectBuilderTestCase.createResolverSet();
@@ -78,9 +83,10 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
     public void createFromResolverSetResult() throws Exception
     {
         ResolverSetResult result = ResolverSetResult.newBuilder().build();
-        ConfigurationInstance<TestConfig> configurationInstance = factory.createConfiguration(CONFIG_NAME, result);
+        ConfigurationInstance<TestConfig> configurationInstance = factory.createConfiguration(CONFIG_NAME, result, Optional.empty());
 
         assertConfiguration(configurationInstance);
+        assertThat(configurationInstance.getConnectionProvider().isPresent(), is(false));
     }
 
     private void assertConfiguration(ConfigurationInstance<TestConfig> configurationInstance)

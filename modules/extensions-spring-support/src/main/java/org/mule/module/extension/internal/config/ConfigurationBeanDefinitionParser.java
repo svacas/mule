@@ -12,7 +12,6 @@ import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.toElementDescriptorBeanDefinition;
 import org.mule.api.registry.Registry;
 import org.mule.extension.api.introspection.ConfigurationModel;
-import org.mule.extension.api.introspection.ExtensionModel;
 
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.w3c.dom.Element;
@@ -33,13 +32,11 @@ import org.w3c.dom.Element;
 final class ConfigurationBeanDefinitionParser extends BaseExtensionBeanDefinitionParser
 {
 
-    private final ExtensionModel extensionModel;
     private final ConfigurationModel configurationModel;
 
-    ConfigurationBeanDefinitionParser(ExtensionModel extensionModel, ConfigurationModel configurationModel)
+    ConfigurationBeanDefinitionParser(ConfigurationModel configurationModel)
     {
         super(ConfigurationProviderFactoryBean.class);
-        this.extensionModel = extensionModel;
         this.configurationModel = configurationModel;
     }
 

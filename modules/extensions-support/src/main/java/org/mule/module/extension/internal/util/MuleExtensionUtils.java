@@ -16,12 +16,12 @@ import org.mule.api.MuleContext;
 import org.mule.api.MuleEvent;
 import org.mule.api.construct.FlowConstruct;
 import org.mule.extension.annotation.api.param.Optional;
-import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.Described;
 import org.mule.extension.api.introspection.ExpressionSupport;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.InterceptableModel;
 import org.mule.extension.api.introspection.ParameterModel;
+import org.mule.extension.api.introspection.ParametrizedModel;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
 import org.mule.extension.api.runtime.Interceptor;
 import org.mule.extension.api.runtime.InterceptorFactory;
@@ -129,15 +129,15 @@ public class MuleExtensionUtils
     }
 
     /**
-     * Collects the {@link ParameterModel parameters} from {@code configurationModel} which
+     * Collects the {@link ParameterModel parameters} from {@code model} which
      * supports or requires expressions
      *
-     * @param configurationModel a {@link ConfigurationModel}
+     * @param model a {@link ParametrizedModel}
      * @return a {@link List} of {@link ParameterModel}. Can be empty but will never be {@code null}
      */
-    public static List<ParameterModel> getDynamicParameters(ConfigurationModel configurationModel)
+    public static List<ParameterModel> getDynamicParameters(ParametrizedModel model)
     {
-        return configurationModel.getParameterModels().stream()
+        return model.getParameterModels().stream()
                 .filter(parameter -> acceptsExpressions(parameter.getExpressionSupport()))
                 .collect(toList());
     }

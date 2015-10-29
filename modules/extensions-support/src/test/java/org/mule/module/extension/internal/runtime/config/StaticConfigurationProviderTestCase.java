@@ -7,12 +7,14 @@
 package org.mule.module.extension.internal.runtime.config;
 
 import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mule.module.extension.internal.util.ExtensionsTestUtils.getParameter;
 import org.mule.api.MuleEvent;
+import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ParameterModel;
 import org.mule.extension.api.runtime.ExpirationPolicy;
 import org.mule.module.extension.HeisenbergExtension;
@@ -55,6 +57,9 @@ public class StaticConfigurationProviderTestCase extends AbstractConfigurationPr
     @Mock
     private ExpirationPolicy expirationPolicy;
 
+    @Mock
+    private ConnectionProvider connectionProvider;
+
     @Before
     public void before() throws Exception
     {
@@ -72,7 +77,11 @@ public class StaticConfigurationProviderTestCase extends AbstractConfigurationPr
         when(resolverSet.getResolvers()).thenReturn(parameters);
         when(resolverSet.isDynamic()).thenReturn(false);
 
-        provider = (LifecycleAwareConfigurationProvider) new DefaultConfigurationProviderFactory().createStaticConfigurationProvider(CONFIG_NAME, configurationModel, resolverSet, muleContext);
+        provider = (LifecycleAwareConfigurationProvider) new DefaultConfigurationProviderFactory().createStaticConfigurationProvider(CONFIG_NAME,
+                                                                                                                                     configurationModel,
+                                                                                                                                     resolverSet,
+                                                                                                                                     new StaticValueResolver<>(connectionProvider),
+                                                                                                                                     muleContext);
         super.before();
     }
 
@@ -80,6 +89,12 @@ public class StaticConfigurationProviderTestCase extends AbstractConfigurationPr
     public void resolveStaticConfig() throws Exception
     {
         assertSameInstancesResolved();
+    }
+
+    @Test
+    public void getConnectionProvider()
+    {
+        assertThat(provider.get(event).getConnectionProvider(), is(sameInstance(connectionProvider)));
     }
 
     @Test

@@ -34,7 +34,7 @@ import org.w3c.dom.Element;
  * Generic implementation of {@link org.springframework.beans.factory.xml.NamespaceHandler}
  * capable of parsing configurations and operations for any given {@link ExtensionModel}
  * which supports the given namespace.
- * <p/>
+ * <p>
  * For this namespace handler to function, an instance of {@link ExtensionManager}
  * has to be accessible and the {@link ExtensionManager#discoverExtensions(ClassLoader)}
  * needs to have successfully discovered and register extensions.
@@ -108,10 +108,11 @@ public class ExtensionNamespaceHandler extends NamespaceHandlerSupport
 
     private void registerConfigurations(ExtensionModel extensionModel)
     {
-        extensionModel.getConfigurations().forEach(configurationModel -> registerBeanDefinitionParser(configurationModel.getName(), new ConfigurationBeanDefinitionParser(extensionModel, configurationModel)));
+        extensionModel.getConfigurations().forEach(configurationModel -> registerBeanDefinitionParser(configurationModel.getName(), new ConfigurationBeanDefinitionParser(configurationModel)));
     }
 
-    private void registerConnectionProviders(ExtensionModel extensionModel) {
+    private void registerConnectionProviders(ExtensionModel extensionModel)
+    {
         extensionModel.getConnectionProviders().forEach(providerModel -> registerBeanDefinitionParser(providerModel.getName(), new ConnectionProviderBeanDefinitionParser(providerModel)));
     }
 

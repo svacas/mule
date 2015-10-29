@@ -6,6 +6,7 @@
  */
 package org.mule.module.extension.internal.introspection;
 
+import static java.util.stream.Collectors.toList;
 import static org.mule.api.expression.ExpressionManager.DEFAULT_EXPRESSION_POSTFIX;
 import static org.mule.api.expression.ExpressionManager.DEFAULT_EXPRESSION_PREFIX;
 import static org.mule.extension.api.introspection.ExpressionSupport.NOT_SUPPORTED;
@@ -40,7 +41,6 @@ import com.google.common.collect.ImmutableList;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Default implementation of {@link ExtensionFactory} which uses a
@@ -141,7 +141,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
 
     private List<OperationModel> toOperations(List<OperationDeclaration> declarations)
     {
-        return declarations.stream().map(this::toOperation).collect(new ImmutableListCollector<>());
+        return declarations.stream().map(this::toOperation).collect(toList());
     }
 
     private OperationModel toOperation(OperationDeclaration declaration)
@@ -196,7 +196,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
             return ImmutableList.of();
         }
 
-        return declarations.stream().map(this::toParameter).collect(Collectors.toList());
+        return declarations.stream().map(this::toParameter).collect(toList());
     }
 
     private ParameterModel toParameter(ParameterDeclaration parameter)

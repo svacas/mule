@@ -27,6 +27,8 @@ import org.mule.extension.api.runtime.ConfigurationProvider;
 import org.mule.module.extension.internal.config.ExtensionConfig;
 import org.mule.module.extension.internal.introspection.DefaultExtensionFactory;
 import org.mule.module.extension.internal.introspection.ExtensionDiscoverer;
+import org.mule.module.extension.internal.runtime.config.DefaultImplicitConfigurationFactory;
+import org.mule.module.extension.internal.runtime.config.ImplicitConfigurationFactory;
 import org.mule.module.extension.internal.runtime.config.StaticConfigurationProvider;
 import org.mule.registry.SpiServiceRegistry;
 import org.mule.time.Time;

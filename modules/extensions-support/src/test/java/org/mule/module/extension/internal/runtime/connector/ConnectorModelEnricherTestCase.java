@@ -21,8 +21,8 @@ import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDecl
 import org.mule.extension.api.introspection.declaration.fluent.Declaration;
 import org.mule.extension.api.runtime.Interceptor;
 import org.mule.extension.api.runtime.InterceptorFactory;
-import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConnectorConfig;
 import org.mule.module.extension.internal.model.property.ImplementingTypeModelProperty;
+import org.mule.module.extension.internal.runtime.connector.petstore.PetStoreConnector;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
 
@@ -35,7 +35,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
 @RunWith(MockitoJUnitRunner.class)
-public class ConnectionTypeModelEnricherTestCase extends AbstractMuleTestCase
+public class ConnectorModelEnricherTestCase extends AbstractMuleTestCase
 {
 
     @Mock
@@ -58,7 +58,7 @@ public class ConnectionTypeModelEnricherTestCase extends AbstractMuleTestCase
         when(describingContext.getDeclarationDescriptor().getDeclaration()).thenReturn(declaration);
         when(declaration.getConfigurations()).thenReturn(asList(connectorConfig, notConnectorConfig));
         when(connectorConfig.getModelProperty(ImplementingTypeModelProperty.KEY))
-                .thenReturn(new ImplementingTypeModelProperty(PetStoreConnectorConfig.class));
+                .thenReturn(new ImplementingTypeModelProperty(PetStoreConnector.class));
     }
 
     @Test

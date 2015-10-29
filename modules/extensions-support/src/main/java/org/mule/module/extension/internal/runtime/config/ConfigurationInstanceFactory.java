@@ -13,8 +13,10 @@ import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.InterceptorFactory;
+import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
+import org.mule.module.extension.internal.runtime.resolver.StaticValueResolver;
 import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 
 import java.util.Optional;
@@ -33,8 +35,11 @@ import java.util.Optional;
 public final class ConfigurationInstanceFactory<T>
 {
 
+    private static final ValueResolver<ConnectionProvider> NULL_CONNECTION_PROVIDER = new StaticValueResolver<>(null);
+
     private final ConfigurationModel configurationModel;
     private final ConfigurationObjectBuilder<T> configurationObjectBuilder;
+    private final boolean modelIsConnectable;
 
     /**
      * Creates a new instance which provides instances derived from the given {@code configurationModel}
@@ -47,6 +52,23 @@ public final class ConfigurationInstanceFactory<T>
     {
         this.configurationModel = configurationModel;
         configurationObjectBuilder = new ConfigurationObjectBuilder<>(configurationModel, resolverSet);
+        modelIsConnectable = configurationModel.getModelProperty(ConnectorModelProperty.KEY);
+    }
+
+    public ConfigurationInstance<T> createConfiguration(String name, MuleEvent event) throws MuleException
+    {
+        ValueResolver<ConnectionProvider> providerResolver;
+        if (modelIsConnectable)
+        {
+            providerResolver = new StaticValueResolver<>(new DefaultImplicitConnectionProviderFactory(event.getMuleContext().getExpressionManager())
+                                                                 .createImplicitConnectionProvider(name, configurationModel.getExtensionModel(), event));
+        }
+        else
+        {
+            providerResolver = NULL_CONNECTION_PROVIDER;
+        }
+
+        return createConfiguration(name, event, providerResolver);
     }
 
     /**
@@ -65,7 +87,6 @@ public final class ConfigurationInstanceFactory<T>
                                                          createConfigurationInstance(event),
                                                          createInterceptors(configurationModel),
                                                          Optional.ofNullable(connectionProviderResolver.resolve(event)));
-
     }
 
     /**
@@ -84,7 +105,6 @@ public final class ConfigurationInstanceFactory<T>
                                                          createConfigurationInstance(resolverSetResult),
                                                          createInterceptors(configurationModel),
                                                          connectionProvider);
-
     }
 
     private T createConfigurationInstance(ResolverSetResult resolverSetResult) throws MuleException
