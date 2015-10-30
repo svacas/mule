@@ -16,6 +16,7 @@ import org.mule.api.MuleContext;
 import org.mule.api.MuleEvent;
 import org.mule.api.construct.FlowConstruct;
 import org.mule.extension.annotation.api.param.Optional;
+import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.Described;
 import org.mule.extension.api.introspection.ExpressionSupport;
 import org.mule.extension.api.introspection.ExtensionModel;
@@ -25,6 +26,7 @@ import org.mule.extension.api.introspection.ParametrizedModel;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
 import org.mule.extension.api.runtime.Interceptor;
 import org.mule.extension.api.runtime.InterceptorFactory;
+import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingMethodModelProperty;
 import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 import org.mule.util.ArrayUtils;
@@ -149,6 +151,10 @@ public class MuleExtensionUtils
     public static boolean acceptsExpressions(ExpressionSupport support)
     {
         return support == SUPPORTED || support == REQUIRED;
+    }
+
+    public static boolean isConnectable(ConfigurationModel configurationModel) {
+        return configurationModel.getModelProperty(ConnectorModelProperty.KEY) != null;
     }
 
     /**

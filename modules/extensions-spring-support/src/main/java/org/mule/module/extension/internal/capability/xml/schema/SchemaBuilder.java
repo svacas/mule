@@ -22,7 +22,6 @@ import static org.mule.module.extension.internal.capability.xml.schema.model.Sch
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_CONNECTION_PROVIDER_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_NAMESPACE;
-import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_PREFIX;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_SCHEMA_LOCATION;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_MESSAGE_PROCESSOR_OR_OUTBOUND_ENDPOINT_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_NAMESPACE;
@@ -108,7 +107,6 @@ public final class SchemaBuilder
 
     private final Set<DataType> registeredEnums = new HashSet<>();
     private final Map<DataType, ComplexTypeHolder> registeredComplexTypesHolders = new HashMap<>();
-    private final Set<String> connectionProviderNames = new HashSet<>();
     private final Map<String, NamedGroup> substitutionGroups = new HashMap<>();
     private final ObjectFactory objectFactory = new ObjectFactory();
 
@@ -190,22 +188,24 @@ public final class SchemaBuilder
         String name = getElementName(providerModel);
         connectionProviderNames.add(name);
 
-        LocalComplexType complexType = new LocalComplexType();
-        Element extension = new TopLevelElement();
-        extension.setName(providerModel.getName());
-        extension.setSubstitutionGroup(new QName(MULE_EXTENSION_NAMESPACE, name, MULE_EXTENSION_PREFIX));
-        extension.setComplexType(complexType);
+        Element providerElement = new TopLevelElement();
+        providerElement.setName(providerModel.getName());
+        providerElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
 
-        ComplexContent complexContent = new ComplexContent();
-        complexType.setComplexContent(complexContent);
+        LocalComplexType complexType = new LocalComplexType();
+        providerElement.setComplexType(complexType);
+
         ExtensionType providerType = new ExtensionType();
         providerType.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
-        complexContent.setExtension(providerType);
 
-        schema.getSimpleTypeOrComplexTypeOrGroup().add(extension);
+        ComplexContent complexContent = new ComplexContent();
+        complexContent.setExtension(providerType);
+        complexType.setComplexContent(complexContent);
+
+        schema.getSimpleTypeOrComplexTypeOrGroup().add(providerElement);
 
         final ExplicitGroup choice = new ExplicitGroup();
-        choice.setMinOccurs(new BigInteger("0"));
+        choice.setMinOccurs(BigInteger.ZERO);
         choice.setMaxOccurs(UNBOUNDED);
 
         registerParameters(providerType, choice, providerModel.getParameterModels());
@@ -217,7 +217,6 @@ public final class SchemaBuilder
         ExtensionType config = registerExtension(configurationModel.getName());
         config.getAttributeOrAttributeGroup().add(createNameAttribute());
 
-        addConnectionProviderSequence(config);
 
         final ExplicitGroup choice = new ExplicitGroup();
         choice.setMinOccurs(new BigInteger("0"));
@@ -230,8 +229,15 @@ public final class SchemaBuilder
         return this;
     }
 
-    private void addConnectionProviderSequence(ExtensionType config)
+    private void addConnectionProviderElement(ConfigurationModel configurationModel, ExplicitGroup choice)
     {
+        TopLevelElement objectElement = new TopLevelElement();
+        objectElement.setMinOccurs(BigInteger.ZERO);
+        objectElement.setMaxOccurs("1");
+        objectElement.setRef(MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_TYPE);
+
+        choice.getParticle().add(objectFactory.createElement(objectElement));
+
         ExplicitGroup connectionProviderSequence = new ExplicitGroup();
         connectionProviderSequence.setMinOccurs(new BigInteger("0"));
         connectionProviderSequence.setMaxOccurs("1");

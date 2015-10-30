@@ -46,9 +46,9 @@ public class SchemaGenerator
         validate(extensionModel, xmlModelProperty);
         SchemaBuilder schemaBuilder = SchemaBuilder.newSchema(xmlModelProperty.getSchemaLocation());
 
-        schemaBuilder.registerConnectionProviderElements(extensionModel.getConnectionProviders());
         extensionModel.getConfigurations().forEach(schemaBuilder::registerConfigElement);
         extensionModel.getOperations().forEach(schemaBuilder::registerOperation);
+        extensionModel.getConnectionProviders().forEach(schemaBuilder::registerConnectionProviderElement);
 
         schemaBuilder.registerEnums();
 
