@@ -25,6 +25,7 @@ import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.Parameter;
 import org.mule.extension.annotation.api.connector.Provider;
 import org.mule.extension.annotation.api.connector.Providers;
+import org.mule.extension.annotation.api.param.Connection;
 import org.mule.extension.annotation.api.param.Optional;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.exception.IllegalModelDefinitionException;
@@ -40,6 +41,7 @@ import org.mule.extension.api.introspection.declaration.fluent.ParameterDeclarat
 import org.mule.extension.api.introspection.declaration.fluent.ParameterDescriptor;
 import org.mule.extension.api.introspection.declaration.fluent.WithParameters;
 import org.mule.extension.api.introspection.declaration.spi.Describer;
+import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ExtendingOperationModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingMethodModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingTypeModelProperty;
@@ -66,6 +68,8 @@ import java.util.Set;
  */
 public final class AnnotationsBasedDescriber implements Describer
 {
+    private static final String DEFAULT_CONNECTION_PROVIDER_NAME = "connection";
+    private static final String CUSTOM_CONNECTION_PROVIDER_SUFFIX = "-" + DEFAULT_CONNECTION_PROVIDER_NAME;
 
     private final Class<?> extensionType;
     private final VersionResolver versionResolver;
@@ -258,11 +262,14 @@ public final class AnnotationsBasedDescriber implements Describer
 
     private <T> void declareConnectionProvider(DeclarationDescriptor declaration, Class<T> providerClass)
     {
+        String name = DEFAULT_CONNECTION_PROVIDER_NAME;
+        String description = EMPTY;
+
         Provider providerAnnotation = providerClass.getAnnotation(Provider.class);
-        if (providerAnnotation == null)
+        if (providerAnnotation != null)
         {
-            throw new IllegalModelDefinitionException(String.format("Connection provider class '%s' is missing the '%s' annotation",
-                                                                    providerClass.getName(), Provider.class.getName()));
+            name = providerAnnotation.name() + CUSTOM_CONNECTION_PROVIDER_SUFFIX;
+            description = providerAnnotation.description();
         }
 
         List<Class<?>> providerGenerics = IntrospectionUtils.getInterfaceGenerics(providerClass, ConnectionProvider.class);
@@ -274,8 +281,8 @@ public final class AnnotationsBasedDescriber implements Describer
                                                                     providerClass.getName(), providerGenerics.size()));
         }
 
-        ConnectionProviderDescriptor providerDescriptor = declaration.withConnectionProvider(providerAnnotation.name())
-                .describedAs(providerAnnotation.description())
+        ConnectionProviderDescriptor providerDescriptor = declaration.withConnectionProvider(name)
+                .describedAs(description)
                 .createdWith(new DefaultConnectionProviderFactory<>(declaration, providerClass))
                 .forConfigsOfType(providerGenerics.get(0))
                 .whichGivesConnectionsOfType(providerGenerics.get(1));
@@ -308,21 +315,29 @@ public final class AnnotationsBasedDescriber implements Describer
 
     private void declareOperationParameters(Method method, OperationDescriptor operation)
     {
-        List<org.mule.module.extension.internal.introspection.ParameterDescriptor> descriptors = MuleExtensionAnnotationParser.parseParameters(method);
+        List<ParsedParameter> descriptors = MuleExtensionAnnotationParser.parseParameters(method);
 
-        for (org.mule.module.extension.internal.introspection.ParameterDescriptor parameterDescriptor : descriptors)
+        for (ParsedParameter parsedParameter : descriptors)
         {
-            ParameterDescriptor parameter = parameterDescriptor.isRequired()
-                                            ? operation.with().requiredParameter(parameterDescriptor.getName())
-                                            : operation.with().optionalParameter(parameterDescriptor.getName()).defaultingTo(parameterDescriptor.getDefaultValue());
+            if (parsedParameter.isAdvertised())
+            {
+                ParameterDescriptor parameter = parsedParameter.isRequired()
+                                                ? operation.with().requiredParameter(parsedParameter.getName())
+                                                : operation.with().optionalParameter(parsedParameter.getName()).defaultingTo(parsedParameter.getDefaultValue());
 
-            parameter.describedAs(EMPTY).ofType(parameterDescriptor.getType());
-            addTypeRestrictions(parameter, parameterDescriptor);
+                parameter.describedAs(EMPTY).ofType(parsedParameter.getType());
+                addTypeRestrictions(parameter, parsedParameter);
+            }
+
+            Connection connectionAnnotation = parsedParameter.getAnnotation(Connection.class);
+            if (connectionAnnotation != null)
+            {
+                operation.withModelProperty(ConnectionTypeModelProperty.KEY, new ConnectionTypeModelProperty(parsedParameter.getType().getRawType()));
+            }
         }
-
     }
 
-    private void addTypeRestrictions(ParameterDescriptor parameter, org.mule.module.extension.internal.introspection.ParameterDescriptor descriptor)
+    private void addTypeRestrictions(ParameterDescriptor parameter, ParsedParameter descriptor)
     {
         Class<?> restriction = descriptor.getTypeRestriction();
         if (restriction != null)

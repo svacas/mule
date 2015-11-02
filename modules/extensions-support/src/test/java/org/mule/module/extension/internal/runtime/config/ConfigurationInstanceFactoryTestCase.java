@@ -19,14 +19,16 @@ import static org.mockito.Mockito.when;
 import org.mule.api.MuleEvent;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.Interceptable;
+import org.mule.extension.api.introspection.OperationModel;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.Interceptor;
-import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
+import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ParameterGroupModelProperty;
 import org.mule.module.extension.internal.runtime.executor.ConfigurationObjectBuilderTestCase;
 import org.mule.module.extension.internal.runtime.executor.ConfigurationObjectBuilderTestCase.TestConfig;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
+import org.mule.module.extension.internal.runtime.resolver.StaticValueResolver;
 import org.mule.tck.junit4.AbstractMuleTestCase;
 import org.mule.tck.size.SmallTest;
 
@@ -36,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @SmallTest
@@ -48,6 +51,9 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
 
     @Mock(answer = RETURNS_DEEP_STUBS)
     private ConfigurationModel configurationModel;
+
+    @Mock
+    private OperationModel operationModel;
 
     @Mock
     private Interceptor interceptor1;
@@ -63,8 +69,10 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
     {
         when(configurationModel.getConfigurationFactory().newInstance()).thenReturn(new TestConfig());
         when(configurationModel.getModelProperty(ParameterGroupModelProperty.KEY)).thenReturn(null);
-        when(configurationModel.getModelProperty(ConnectorModelProperty.KEY)).thenReturn(null);
+        when(configurationModel.getModelProperty(ConnectionTypeModelProperty.KEY)).thenReturn(null);
         when(configurationModel.getInterceptorFactories()).thenReturn(asList(() -> interceptor1, () -> interceptor2));
+        when(configurationModel.getExtensionModel().getOperations()).thenReturn(asList(operationModel));
+        when(operationModel.getModelProperty(ConnectionTypeModelProperty.KEY)).thenReturn(new ConnectionTypeModelProperty(Object.class));
 
         resolverSet = ConfigurationObjectBuilderTestCase.createResolverSet();
         factory = new ConfigurationInstanceFactory<>(configurationModel, resolverSet);
@@ -73,8 +81,8 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
     @Test
     public void createFromEvent() throws Exception
     {
-        MuleEvent event = mock(MuleEvent.class);
-        ConfigurationInstance<TestConfig> configurationInstance = factory.createConfiguration(CONFIG_NAME, event);
+        MuleEvent event = mock(MuleEvent.class, Mockito.RETURNS_DEEP_STUBS);
+        ConfigurationInstance<TestConfig> configurationInstance = factory.createConfiguration(CONFIG_NAME, event, new StaticValueResolver<>(null));
 
         assertConfiguration(configurationInstance);
     }

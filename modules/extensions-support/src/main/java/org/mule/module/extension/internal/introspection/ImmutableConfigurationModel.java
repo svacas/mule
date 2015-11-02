@@ -6,7 +6,6 @@
  */
 package org.mule.module.extension.internal.introspection;
 
-import static org.mule.module.extension.internal.util.MuleExtensionUtils.validateRepeatedNames;
 import static org.mule.util.CollectionUtils.immutableList;
 import static org.mule.util.Preconditions.checkArgument;
 import org.mule.extension.api.introspection.ConfigurationFactory;
@@ -51,7 +50,6 @@ final class ImmutableConfigurationModel extends AbstractInterceptableModel imple
                                           List<InterceptorFactory> interceptorFactories)
     {
         super(name, description, modelProperties, interceptorFactories);
-        validateRepeatedNames(parameterModels);
         checkArgument(configurationFactory != null, "instantiator cannot be null");
 
         this.extensionModelSupplier = extensionModelSupplier;

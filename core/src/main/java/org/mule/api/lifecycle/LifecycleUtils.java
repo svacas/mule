@@ -237,9 +237,12 @@ public class LifecycleUtils
         }
     }
 
-    private static Object unwrap(Object value) {
-        if (value instanceof Optional) {
-            return ((Optional) value).get();
+    private static Object unwrap(Object value)
+    {
+        if (value instanceof Optional)
+        {
+            Optional<?> optional = (Optional) value;
+            return optional.isPresent() ? optional.get() : null;
         }
 
         return value;

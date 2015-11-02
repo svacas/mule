@@ -13,6 +13,7 @@ import static org.hamcrest.CoreMatchers.sameInstance;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.withSettings;
 import org.mule.api.config.MuleProperties;
@@ -37,6 +38,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
+import org.mockito.MockitoAnnotations;
 
 @SmallTest
 @RunWith(Parameterized.class)
@@ -49,8 +51,8 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     public static Collection<Object[]> data()
     {
         return Arrays.asList(new Object[][] {
-                                     {"With provider", mock(ConnectionProvider.class, withSettings().extraInterfaces(Lifecycle.class, MuleContextAware.class))},
-                                     {"Without provider", null}}
+                {"With provider", mock(ConnectionProvider.class, withSettings().extraInterfaces(Lifecycle.class, MuleContextAware.class))},
+                {"Without provider", null}}
         );
     }
 
@@ -73,6 +75,7 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     @Override
     public void before() throws Exception
     {
+        MockitoAnnotations.initMocks(this);
         super.before();
         muleContext.getRegistry().registerObject(MuleProperties.OBJECT_TIME_SUPPLIER, timeSupplier);
     }
@@ -80,6 +83,10 @@ public class LifecycleAwareConfigurationTestCase extends AbstractInterceptableCo
     @Override
     protected LifecycleAwareConfigurationInstance createInterceptable()
     {
+        if (connectionProvider.isPresent())
+        {
+            reset(connectionProvider.get());
+        }
         return new LifecycleAwareConfigurationInstance(NAME, configurationModel, value, getInterceptors(), connectionProvider);
     }
 

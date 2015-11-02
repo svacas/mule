@@ -48,20 +48,18 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     @Mock
     private PetStoreConnector config;
 
-    @Mock
-    private PetStoreConnectionProvider connectionProvider;
-
+    private PetStoreConnectionProvider connectionProvider = spy(new PetStoreConnectionProvider());
     private ConnectionInterceptor interceptor;
-    private PetStoreConnectionProvider connectionHandler = spy(new PetStoreConnectionProvider());
 
     @Before
     public void before() throws Exception
     {
+        when(operationContext.getConfiguration().getValue()).thenReturn(config);
         when(operationContext.getConfiguration().getConnectionProvider()).thenReturn(Optional.of(connectionProvider));
         when(operationContext.getVariable(CONNECTION_PARAM)).thenReturn(null);
 
-        when(connectionProvider.getUsername()).thenReturn(USER);
-        when(connectionProvider.getPassword()).thenReturn(PASSWORD);
+        connectionProvider.setUsername(USER);
+        connectionProvider.setPassword(PASSWORD);
 
         interceptor = new ConnectionInterceptor();
         muleContext.getInjector().inject(interceptor);
@@ -71,7 +69,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     public void setConnection() throws Exception
     {
         PetStoreClient connection = getConnection();
-        verify(connectionHandler).connect(config);
+        verify(connectionProvider).connect(config);
 
         assertThat(connection, is(notNullValue()));
         assertThat(connection.getUsername(), is(USER));
@@ -85,18 +83,18 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
         PetStoreClient connection2 = getConnection();
 
         assertThat(connection1, is(sameInstance(connection2)));
-        verify(connectionHandler).connect(config);
+        verify(connectionProvider).connect(config);
     }
 
     @Test
     public void getConnectionConcurrentlyAndConnectOnlyOnce() throws Exception
     {
         PetStoreClient mockConnection = mock(PetStoreClient.class);
-        connectionHandler = mock(PetStoreConnectionProvider.class);
+        connectionProvider = mock(PetStoreConnectionProvider.class);
         before();
 
         Latch latch = new Latch();
-        when(connectionHandler.connect(config)).thenAnswer(invocation -> {
+        when(connectionProvider.connect(config)).thenAnswer(invocation -> {
             new Thread(() -> {
                 try
                 {
@@ -115,7 +113,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
         PetStoreClient connection = getConnection();
         assertThat(latch.await(5, TimeUnit.SECONDS), is(true));
         assertThat(connection, is(sameInstance(mockConnection)));
-        verify(connectionHandler).connect(config);
+        verify(connectionProvider).connect(config);
 
     }
 
@@ -129,9 +127,9 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     //TODO: MULE-8952 -> test these cases on the connection service
 
     //@Test
-    //public void connectionHandlerFailsToDisconnect() throws Exception
+    //public void connectionProviderFailsToDisconnect() throws Exception
     //{
-    //    final Exception exception = setConnectionHandlerWhichFailsToDisconnect();
+    //    final Exception exception = setconnectionProviderWhichFailsToDisconnect();
     //
     //    //have a connection established
     //    getConnection();
@@ -146,7 +144,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     //        assertThat(e, is(sameInstance(exception)));
     //    }
     //
-    //    verify(connectionHandler).stop();
+    //    verify(connectionProvider).stop();
     //
     //    //stop again to verify that the write lock was released. If it didn't then this will hang
     //    //and the test will time out
@@ -154,9 +152,9 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     //}
     //
     //@Test
-    //public void connectionHandlerFailsToStop() throws Exception
+    //public void connectionProviderFailsToStop() throws Exception
     //{
-    //    final Exception exception = setConnectionHandlerWhichFailsToStop();
+    //    final Exception exception = setconnectionProviderWhichFailsToStop();
     //
     //    try
     //    {
@@ -168,7 +166,7 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     //        assertThat(e, is(sameInstance(exception)));
     //    }
     //
-    //    verify(connectionHandler).stop();
+    //    verify(connectionProvider).stop();
     //
     //    //stop again to verify that the write lock was released. If it didn't then this will hang
     //    //and the test will time out
@@ -183,22 +181,22 @@ public class ConnectionInterceptorTestCase extends AbstractMuleContextTestCase
     //    }
     //}
 
-    //private Exception setConnectionHandlerWhichFailsToDisconnect() throws Exception
+    //private Exception setconnectionProviderWhichFailsToDisconnect() throws Exception
     //{
-    //    connectionHandler = mock(PetStoreConnectionProvider.class);
+    //    connectionProvider = mock(PetStoreConnectionProvider.class);
     //    final Exception exception = new RuntimeException();
-    //    doThrow(exception).when(connectionHandler).disconnect(Mockito.any(PetStoreClient.class));
-    //    when(connectionHandler.connect(config)).thenReturn(mock(PetStoreClient.class));
+    //    doThrow(exception).when(connectionProvider).disconnect(Mockito.any(PetStoreClient.class));
+    //    when(connectionProvider.connect(config)).thenReturn(mock(PetStoreClient.class));
     //    before();
     //
     //    return exception;
     //}
     //
-    //private Exception setConnectionHandlerWhichFailsToStop() throws Exception
+    //private Exception setconnectionProviderWhichFailsToStop() throws Exception
     //{
-    //    connectionHandler = mock(PetStoreConnectionProvider.class);
+    //    connectionProvider = mock(PetStoreConnectionProvider.class);
     //    final Exception exception = new RuntimeException();
-    //    doThrow(exception).when(connectionHandler).stop();
+    //    doThrow(exception).when(connectionProvider).stop();
     //    before();
     //
     //    return exception;

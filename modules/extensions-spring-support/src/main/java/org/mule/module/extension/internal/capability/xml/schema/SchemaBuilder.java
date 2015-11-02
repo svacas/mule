@@ -34,8 +34,10 @@ import static org.mule.module.extension.internal.capability.xml.schema.model.Sch
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getAlias;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getExpressionSupport;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getFieldDataType;
+import static org.mule.module.extension.internal.util.IntrospectionUtils.getParameterFields;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.isIgnored;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.isRequired;
+import static org.mule.module.extension.internal.util.MuleExtensionUtils.getConnectedOperations;
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.getDynamicParameters;
 import static org.mule.module.extension.internal.util.NameUtils.getTopLevelTypeName;
 import static org.mule.module.extension.internal.util.NameUtils.hyphenize;
@@ -78,7 +80,6 @@ import org.mule.module.extension.internal.capability.xml.schema.model.Union;
 import org.mule.module.extension.internal.introspection.AbstractDataQualifierVisitor;
 import org.mule.module.extension.internal.model.property.ExtendingOperationModelProperty;
 import org.mule.module.extension.internal.model.property.TypeRestrictionModelProperty;
-import org.mule.module.extension.internal.util.IntrospectionUtils;
 import org.mule.module.extension.internal.util.NameUtils;
 import org.mule.util.ArrayUtils;
 import org.mule.util.StringUtils;
@@ -168,26 +169,8 @@ public final class SchemaBuilder
         return this;
     }
 
-    public SchemaBuilder registerConnectionProviderElements(Collection<ConnectionProviderModel> providerModels)
+    public SchemaBuilder registerConnectionProviderElement(ConnectionProviderModel providerModel)
     {
-        providerModels.forEach(this::registerConnectionProviderElement);
-        connectionProviderNames.forEach(providerName -> {
-            Element substitutionElement = new TopLevelElement();
-            substitutionElement.setName(providerName);
-            substitutionElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
-            substitutionElement.setAbstract(true);
-            substitutionElement.setAnnotation(createDocAnnotation("A placeholder for ConnectionProvider elements."));
-            schema.getSimpleTypeOrComplexTypeOrGroup().add(substitutionElement);
-        });
-
-        return this;
-    }
-
-    private SchemaBuilder registerConnectionProviderElement(ConnectionProviderModel providerModel)
-    {
-        String name = getElementName(providerModel);
-        connectionProviderNames.add(name);
-
         Element providerElement = new TopLevelElement();
         providerElement.setName(providerModel.getName());
         providerElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
@@ -222,36 +205,12 @@ public final class SchemaBuilder
         choice.setMinOccurs(new BigInteger("0"));
         choice.setMaxOccurs(UNBOUNDED);
 
+        addConnectionProviderElement(choice, configurationModel);
         addDynamicConfigPolicyElement(choice, configurationModel);
         registerParameters(config, choice, configurationModel.getParameterModels());
         config.setAnnotation(createDocAnnotation(configurationModel.getDescription()));
 
         return this;
-    }
-
-    private void addConnectionProviderElement(ConfigurationModel configurationModel, ExplicitGroup choice)
-    {
-        TopLevelElement objectElement = new TopLevelElement();
-        objectElement.setMinOccurs(BigInteger.ZERO);
-        objectElement.setMaxOccurs("1");
-        objectElement.setRef(MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_TYPE);
-
-        choice.getParticle().add(objectFactory.createElement(objectElement));
-
-        ExplicitGroup connectionProviderSequence = new ExplicitGroup();
-        connectionProviderSequence.setMinOccurs(new BigInteger("0"));
-        connectionProviderSequence.setMaxOccurs("1");
-
-        connectionProviderNames.forEach(providerName -> {
-            Element providerElement = new TopLevelElement();
-            providerElement.setRef(new QName(providerName));
-            providerElement.setMinOccurs(new BigInteger("0"));
-            providerElement.setMaxOccurs("1");
-
-            connectionProviderSequence.getParticle().add(providerElement);
-        });
-
-        config.setSequence(connectionProviderSequence);
     }
 
     private Attribute createNameAttribute()
@@ -266,6 +225,19 @@ public final class SchemaBuilder
         registerOperationType(typeName, operationModel);
 
         return this;
+    }
+
+    private void addConnectionProviderElement(ExplicitGroup all, ConfigurationModel configurationModel)
+    {
+        if (!getConnectedOperations(configurationModel.getExtensionModel()).isEmpty())
+        {
+            TopLevelElement objectElement = new TopLevelElement();
+            objectElement.setMinOccurs(BigInteger.ZERO);
+            objectElement.setMaxOccurs("1");
+            objectElement.setRef(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
+
+            all.getParticle().add(objectFactory.createElement(objectElement));
+        }
     }
 
     private void addDynamicConfigPolicyElement(ExplicitGroup all, ConfigurationModel configurationModel)
@@ -352,13 +324,6 @@ public final class SchemaBuilder
         return type.getName();
     }
 
-    private String getElementName(ConnectionProviderModel providerModel)
-    {
-        return String.format("connectionProvider-%s-%s",
-                             providerModel.getConfigurationType().getName(),
-                             providerModel.getConnectionType().getName());
-    }
-
     private TopLevelComplexType registerBasePojoType(DataType type, String description)
     {
         final TopLevelComplexType complexType = new TopLevelComplexType();
@@ -377,7 +342,7 @@ public final class SchemaBuilder
         final ExplicitGroup all = new ExplicitGroup();
         extension.setSequence(all);
 
-        for (Field field : IntrospectionUtils.getParameterFields(type.getRawType()))
+        for (Field field : getParameterFields(type.getRawType()))
         {
             if (isIgnored(field))
             {

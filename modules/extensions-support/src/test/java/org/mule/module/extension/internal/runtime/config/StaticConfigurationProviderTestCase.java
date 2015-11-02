@@ -94,7 +94,7 @@ public class StaticConfigurationProviderTestCase extends AbstractConfigurationPr
     @Test
     public void getConnectionProvider()
     {
-        assertThat(provider.get(event).getConnectionProvider(), is(sameInstance(connectionProvider)));
+        assertThat(provider.get(event).getConnectionProvider().get(), is(sameInstance(connectionProvider)));
     }
 
     @Test

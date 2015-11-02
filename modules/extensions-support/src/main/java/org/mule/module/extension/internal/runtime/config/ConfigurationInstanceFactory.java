@@ -13,11 +13,11 @@ import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.runtime.ConfigurationInstance;
 import org.mule.extension.api.runtime.InterceptorFactory;
-import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSetResult;
 import org.mule.module.extension.internal.runtime.resolver.StaticValueResolver;
 import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
+import org.mule.module.extension.internal.util.MuleExtensionUtils;
 
 import java.util.Optional;
 
@@ -52,7 +52,7 @@ public final class ConfigurationInstanceFactory<T>
     {
         this.configurationModel = configurationModel;
         configurationObjectBuilder = new ConfigurationObjectBuilder<>(configurationModel, resolverSet);
-        modelIsConnectable = configurationModel.getModelProperty(ConnectorModelProperty.KEY);
+        modelIsConnectable = !MuleExtensionUtils.getConnectedOperations(configurationModel.getExtensionModel()).isEmpty();
     }
 
     public ConfigurationInstance<T> createConfiguration(String name, MuleEvent event) throws MuleException

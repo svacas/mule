@@ -38,7 +38,6 @@ final class ConfigurationProviderFactoryBean implements FactoryBean<Configuratio
     private final ConfigurationProvider<Object> configurationProvider;
     private final ConfigurationProviderFactory configurationProviderFactory = new DefaultConfigurationProviderFactory();
     private final TimeSupplier timeSupplier;
-
     private ValueResolver<ConnectionProvider> connectionProviderResolver = new StaticValueResolver<>(null);
 
     ConfigurationProviderFactoryBean(String name,

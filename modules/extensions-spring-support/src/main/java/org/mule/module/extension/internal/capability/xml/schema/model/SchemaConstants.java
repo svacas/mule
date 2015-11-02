@@ -56,16 +56,12 @@ public final class SchemaConstants
     // ATTRIBUTES
     public static final String USE_REQUIRED = "required";
     public static final String USE_OPTIONAL = "optional";
-    public static final String INNER_PREFIX = "inner-";
     public static final String ATTRIBUTE_NAME_CONFIG = "config-ref";
     public static final String ATTRIBUTE_DESCRIPTION_CONFIG = "Specify which configuration to use for this invocation.";
     public static final String ATTRIBUTE_NAME_VALUE = "value";
     public static final String ENUM_TYPE_SUFFIX = "EnumType";
     public static final String TYPE_SUFFIX = "Type";
     public static final String UNBOUNDED = "unbounded";
-    public static final String LAX = "lax";
     public static final String ATTRIBUTE_NAME_NAME = "name";
-    public static final String ATTRIBUTE_NAME_NAME_DESCRIPTION = "Give a name to this configuration so it can be later referenced by config-ref.";
-    public static String DEFAULT_PATTERN = "DEFAULT_PATTERN";
     public static final String XSD_EXTENSION = ".xsd";
 }

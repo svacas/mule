@@ -6,16 +6,16 @@
  */
 package org.mule.module.extension.internal.model.property;
 
-public class ConnectorModelProperty
+public class ConnectionTypeModelProperty
 {
     /**
      * A unique key that identifies this property type
      */
-    public static final String KEY = ConnectorModelProperty.class.getName();
+    public static final String KEY = ConnectionTypeModelProperty.class.getName();
 
     private final Class<?> connectionType;
 
-    public ConnectorModelProperty(Class<?> connectionType)
+    public ConnectionTypeModelProperty(Class<?> connectionType)
     {
         this.connectionType = connectionType;
     }

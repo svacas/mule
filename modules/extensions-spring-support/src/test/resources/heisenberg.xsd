@@ -143,6 +143,18 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
+    <xs:element xmlns="http://www.mulesoft.org/schema/mule/heisenberg" type="CallSaulType" substitutionGroup="heisenberg-empire" name="call-saul"></xs:element>
+    <xs:complexType name="CallSaulType">
+        <xs:complexContent>
+            <xs:extension xmlns:mule="http://www.mulesoft.org/schema/mule/core" base="mule:abstractMessageProcessorType">
+                <xs:attribute type="mule:substitutableName" use="optional" name="config-ref">
+                    <xs:annotation>
+                        <xs:documentation>Specify which configuration to use for this invocation.</xs:documentation>
+                    </xs:annotation>
+                </xs:attribute>
+            </xs:extension>
+        </xs:complexContent>
+    </xs:complexType>
     <xs:element xmlns="http://www.mulesoft.org/schema/mule/heisenberg" type="DieType" substitutionGroup="heisenberg-empire" name="die"></xs:element>
     <xs:complexType name="DieType">
         <xs:complexContent>
@@ -361,8 +373,7 @@
         <xs:complexType>
             <xs:complexContent>
                 <xs:extension xmlns:mule="http://www.mulesoft.org/schema/mule/core" base="mule:abstractExtensionType">
-                    <xs:attribute type="mule:expressionString" use="required" name="password"></xs:attribute>
-                    <xs:attribute type="mule:expressionString" use="required" name="username"></xs:attribute>
+                    <xs:attribute type="mule:expressionString" use="required" name="saulPhoneNumber"></xs:attribute>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>

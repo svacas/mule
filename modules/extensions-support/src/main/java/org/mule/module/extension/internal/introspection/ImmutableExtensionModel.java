@@ -7,7 +7,6 @@
 package org.mule.module.extension.internal.introspection;
 
 import static org.mule.module.extension.internal.util.MuleExtensionUtils.toMap;
-import static org.mule.module.extension.internal.util.MuleExtensionUtils.validateRepeatedNames;
 import static org.mule.util.CollectionUtils.immutableList;
 import static org.mule.util.Preconditions.checkArgument;
 import org.mule.extension.api.exception.NoSuchConfigurationException;
@@ -60,7 +59,6 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
         super(name, description, modelProperties);
 
         checkArgument(!name.contains(" "), "Extension name cannot contain spaces");
-        validateRepeatedNames(configurationModels, operationModels);
 
         this.configurations = toMap(configurationModels);
         this.operations = toMap(operationModels);

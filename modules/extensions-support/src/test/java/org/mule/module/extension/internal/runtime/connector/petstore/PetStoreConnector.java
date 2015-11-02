@@ -10,18 +10,17 @@ import org.mule.extension.annotation.api.Extension;
 import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.Parameter;
 import org.mule.extension.annotation.api.capability.Xml;
-import org.mule.extension.annotation.api.connector.ConnectionType;
 import org.mule.extension.annotation.api.connector.Providers;
 
 import java.util.List;
 
 @Extension(name = "petstore", description = "PetStore Test connector")
 @Operations(PetStoreOperations.class)
-@ConnectionType(PetStoreClient.class)
 @Providers(PetStoreConnectionProvider.class)
 @Xml(schemaLocation = "http://www.mulesoft.org/schema/mule/petstore", namespace = "petstore", schemaVersion = "4.0")
 public class PetStoreConnector
 {
+
     @Parameter
     private List<String> pets;
 

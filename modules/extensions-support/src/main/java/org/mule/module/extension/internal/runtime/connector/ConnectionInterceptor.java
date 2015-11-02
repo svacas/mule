@@ -86,8 +86,13 @@ class ConnectionInterceptor implements Interceptor
         }
 
         Optional<ConnectionProvider> connectionProvider = operationContext.getConfiguration().getConnectionProvider();
-        if (!connectionProvider.isPresent()) {
-
+        if (!connectionProvider.isPresent())
+        {
+            throw new IllegalStateException(String.format("Operation '%s' of extension '%s' requires a connection but was executed with config '%s' which " +
+                                                          "is not associated to a connection provider",
+                                                          operationContext.getOperationModel().getName(),
+                                                          operationContext.getConfiguration().getModel().getExtensionModel().getName(),
+                                                          operationContext.getConfiguration().getName()));
         }
 
         writeLock.lock();

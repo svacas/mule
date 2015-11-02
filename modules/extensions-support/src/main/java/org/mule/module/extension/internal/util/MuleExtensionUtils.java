@@ -16,39 +16,29 @@ import org.mule.api.MuleContext;
 import org.mule.api.MuleEvent;
 import org.mule.api.construct.FlowConstruct;
 import org.mule.extension.annotation.api.param.Optional;
-import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.Described;
 import org.mule.extension.api.introspection.ExpressionSupport;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.InterceptableModel;
+import org.mule.extension.api.introspection.OperationModel;
 import org.mule.extension.api.introspection.ParameterModel;
 import org.mule.extension.api.introspection.ParametrizedModel;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
 import org.mule.extension.api.runtime.Interceptor;
 import org.mule.extension.api.runtime.InterceptorFactory;
-import org.mule.module.extension.internal.model.property.ConnectorModelProperty;
+import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingMethodModelProperty;
 import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
-import org.mule.util.ArrayUtils;
 import org.mule.util.collection.ImmutableListCollector;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.LinkedHashMultiset;
-import com.google.common.collect.Multiset;
-import com.google.common.collect.Multisets;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 
@@ -62,33 +52,6 @@ public class MuleExtensionUtils
 
     private MuleExtensionUtils()
     {
-    }
-
-    /**
-     * Verifies that none of the {@link Described} items in {@code describedCollection} have an
-     * equivalent value for {@link Described#getName()}
-     *
-     * @param describedCollections an array of {@link Collection}s with instances of {@link Described}
-     * @throws IllegalArgumentException if the validation fails
-     */
-    public static void validateRepeatedNames(Collection<? extends Described>... describedCollections)
-    {
-        if (ArrayUtils.isEmpty(describedCollections))
-        {
-            return;
-        }
-
-        List<Described> all = new ArrayList<>();
-        for (Collection<? extends Described> describedCollection : describedCollections)
-        {
-            all.addAll(describedCollection);
-        }
-
-        Set<String> clashes = collectRepeatedNames(all);
-        if (!clashes.isEmpty())
-        {
-            throw new IllegalArgumentException("The following names have been assigned to multiple components: " + Joiner.on(", ").join(clashes));
-        }
     }
 
     /**
@@ -153,8 +116,11 @@ public class MuleExtensionUtils
         return support == SUPPORTED || support == REQUIRED;
     }
 
-    public static boolean isConnectable(ConfigurationModel configurationModel) {
-        return configurationModel.getModelProperty(ConnectorModelProperty.KEY) != null;
+    public static List<OperationModel> getConnectedOperations(ExtensionModel extensionModel)
+    {
+        return extensionModel.getOperations().stream()
+                .filter(o -> o.getModelProperty(ConnectionTypeModelProperty.KEY) != null)
+                .collect(toList());
     }
 
     /**
@@ -239,39 +205,6 @@ public class MuleExtensionUtils
         }
 
         return null;
-    }
-
-    private static Set<String> collectRepeatedNames(Collection<? extends Described> describedCollection)
-    {
-        if (CollectionUtils.isEmpty(describedCollection))
-        {
-            return ImmutableSet.of();
-        }
-
-        Multiset<String> names = LinkedHashMultiset.create();
-
-        for (Described described : describedCollection)
-        {
-            if (described == null)
-            {
-                throw new IllegalArgumentException("A null described was provided");
-            }
-            names.add(described.getName());
-        }
-
-        names = Multisets.copyHighestCountFirst(names);
-        Set<String> repeatedNames = new HashSet<>();
-        for (String name : names)
-        {
-            if (names.count(name) == 1)
-            {
-                break;
-            }
-
-            repeatedNames.add(name);
-        }
-
-        return repeatedNames;
     }
 
     private static class DescribedComparator implements Comparator<Described>

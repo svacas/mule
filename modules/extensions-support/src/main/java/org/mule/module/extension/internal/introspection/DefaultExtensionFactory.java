@@ -33,6 +33,9 @@ import org.mule.extension.api.introspection.declaration.fluent.ParameterDeclarat
 import org.mule.extension.api.introspection.declaration.spi.ModelEnricher;
 import org.mule.extension.api.runtime.Interceptor;
 import org.mule.module.extension.internal.DefaultDescribingContext;
+import org.mule.module.extension.internal.introspection.validation.ConnectionProviderModelValidator;
+import org.mule.module.extension.internal.introspection.validation.ModelValidator;
+import org.mule.module.extension.internal.introspection.validation.NameClashModelValidator;
 import org.mule.module.extension.internal.runtime.executor.OperationExecutorFactoryWrapper;
 import org.mule.util.ValueHolder;
 import org.mule.util.collection.ImmutableListCollector;
@@ -57,6 +60,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
 {
 
     private final List<ModelEnricher> modelEnrichers;
+    private final List<ModelValidator> modelValidators;
 
     /**
      * Creates a new instance and uses the given {@code serviceRegistry} to
@@ -68,6 +72,10 @@ public final class DefaultExtensionFactory implements ExtensionFactory
     public DefaultExtensionFactory(ServiceRegistry serviceRegistry, ClassLoader classLoader)
     {
         modelEnrichers = ImmutableList.copyOf(serviceRegistry.lookupProviders(ModelEnricher.class, classLoader));
+        modelValidators = ImmutableList.<ModelValidator>builder()
+                .add(new NameClashModelValidator())
+                .add(new ConnectionProviderModelValidator())
+                .build();
     }
 
     /**
@@ -86,7 +94,10 @@ public final class DefaultExtensionFactory implements ExtensionFactory
     public ExtensionModel createFrom(Descriptor descriptor, DescribingContext describingContext)
     {
         enrichModel(describingContext);
-        return toExtension(descriptor.getRootDeclaration().getDeclaration());
+        ExtensionModel extensionModel = toExtension(descriptor.getRootDeclaration().getDeclaration());
+        modelValidators.forEach(v -> v.validate(extensionModel));
+
+        return extensionModel;
     }
 
     private ExtensionModel toExtension(Declaration declaration)
