@@ -6,6 +6,7 @@
  */
 package org.mule.module.extension.internal.introspection.validation;
 
+import static java.util.stream.Collectors.toSet;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.extension.api.introspection.ConfigurationModel;
@@ -17,8 +18,7 @@ import org.mule.util.CollectionUtils;
 
 import com.google.common.base.Joiner;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public final class ConnectionProviderModelValidator implements ModelValidator
 {
@@ -71,13 +71,13 @@ public final class ConnectionProviderModelValidator implements ModelValidator
 
     private Class<?> getOperationsConnectionType(ExtensionModel extensionModel)
     {
-        List<Class<?>> connectionTypes = extensionModel.getOperations().stream()
+        Set<Class<?>> connectionTypes = extensionModel.getOperations().stream()
                 .map(operation -> {
                     ConnectionTypeModelProperty connectionProperty = operation.getModelProperty(ConnectionTypeModelProperty.KEY);
                     return connectionProperty != null ? connectionProperty.getConnectionType() : null;
                 })
                 .filter(type -> type != null)
-                .collect(Collectors.toList());
+                .collect(toSet());
 
         if (CollectionUtils.isEmpty(connectionTypes))
         {
@@ -91,7 +91,7 @@ public final class ConnectionProviderModelValidator implements ModelValidator
         }
         else
         {
-            return connectionTypes.get(0);
+            return connectionTypes.stream().findFirst().get();
         }
     }
 }

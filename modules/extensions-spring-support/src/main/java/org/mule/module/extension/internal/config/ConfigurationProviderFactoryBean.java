@@ -35,9 +35,15 @@ import org.springframework.beans.factory.FactoryBean;
  */
 final class ConfigurationProviderFactoryBean implements FactoryBean<ConfigurationProvider<Object>>
 {
-    private final ConfigurationProvider<Object> configurationProvider;
-    private final ConfigurationProviderFactory configurationProviderFactory = new DefaultConfigurationProviderFactory();
+
+    private final String name;
     private final TimeSupplier timeSupplier;
+    private final ElementDescriptor element;
+    private final MuleContext muleContext;
+    private final ConfigurationModel configurationModel;
+    private final ConfigurationProviderFactory configurationProviderFactory = new DefaultConfigurationProviderFactory();
+
+    private ConfigurationProvider<Object> configurationProvider;
     private ValueResolver<ConnectionProvider> connectionProviderResolver = new StaticValueResolver<>(null);
 
     ConfigurationProviderFactoryBean(String name,
@@ -46,40 +52,48 @@ final class ConfigurationProviderFactoryBean implements FactoryBean<Configuratio
                                      MuleContext muleContext,
                                      TimeSupplier timeSupplier) throws ConfigurationException
     {
+        this.name = name;
         this.timeSupplier = timeSupplier;
-        ResolverSet resolverSet = getResolverSet(element, configurationModel.getParameterModels());
-        try
-        {
-            if (resolverSet.isDynamic() || connectionProviderResolver.isDynamic())
-            {
-                configurationProvider = configurationProviderFactory.createDynamicConfigurationProvider(
-                        name,
-                        configurationModel,
-                        resolverSet,
-                        connectionProviderResolver,
-                        getDynamicConfigPolicy(element));
-            }
-            else
-            {
-                configurationProvider = configurationProviderFactory.createStaticConfigurationProvider(
-                        name,
-                        configurationModel,
-                        resolverSet,
-                        connectionProviderResolver,
-                        muleContext);
-            }
-
-            muleContext.getInjector().inject(configurationProvider);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        this.element = element;
+        this.configurationModel = configurationModel;
+        this.muleContext = muleContext;
     }
 
     @Override
-    public ConfigurationProvider<Object> getObject() throws Exception
+    public synchronized ConfigurationProvider<Object> getObject() throws Exception
     {
+        if (configurationModel != null)
+        {
+            ResolverSet resolverSet = getResolverSet(element, configurationModel.getParameterModels());
+            try
+            {
+                if (resolverSet.isDynamic() || connectionProviderResolver.isDynamic())
+                {
+                    configurationProvider = configurationProviderFactory.createDynamicConfigurationProvider(
+                            name,
+                            configurationModel,
+                            resolverSet,
+                            connectionProviderResolver,
+                            getDynamicConfigPolicy(element));
+                }
+                else
+                {
+                    configurationProvider = configurationProviderFactory.createStaticConfigurationProvider(
+                            name,
+                            configurationModel,
+                            resolverSet,
+                            connectionProviderResolver,
+                            muleContext);
+                }
+
+                muleContext.getInjector().inject(configurationProvider);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
         return configurationProvider;
     }
 

@@ -31,7 +31,7 @@ import javax.inject.Inject;
  * @since 4.0
  */
 //TODO: Much of the logic here should be moved to the ConnectionService when MULE-8952 is implemented
-class ConnectionInterceptor implements Interceptor
+public final class ConnectionInterceptor implements Interceptor
 {
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();

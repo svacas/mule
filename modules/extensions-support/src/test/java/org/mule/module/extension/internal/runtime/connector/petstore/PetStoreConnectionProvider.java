@@ -11,17 +11,12 @@ import org.mule.api.MuleException;
 import org.mule.api.lifecycle.InitialisationException;
 import org.mule.api.lifecycle.Lifecycle;
 import org.mule.extension.annotation.api.Parameter;
-import org.mule.extension.annotation.api.connector.Provider;
 import org.mule.extension.api.connection.ConnectionProvider;
 
 import javax.inject.Inject;
 
-@Provider(name=PetStoreConnectionProvider.CONNECTION_PROVIDER_NAME, description = PetStoreConnectionProvider.CONNECTION_PROVIDER_DESCRIPTION)
 public class PetStoreConnectionProvider implements ConnectionProvider<PetStoreConnector, PetStoreClient>, Lifecycle
 {
-    public static final String CONNECTION_PROVIDER_NAME = "connection";
-    public static final String CONNECTION_PROVIDER_DESCRIPTION = "connection provider";
-
     private int initialise, start, stop, dispose = 0;
 
     @Inject

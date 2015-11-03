@@ -6,6 +6,7 @@
  */
 package org.mule.module.extension.internal.config;
 
+import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.CONNECTION_PROVIDER_RESOLVER_PROPERTY;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.parseConnectionProviderName;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.toElementDescriptorBeanDefinition;
 import org.mule.config.spring.util.SpringXMLUtils;
@@ -34,7 +35,7 @@ final class ConnectionProviderBeanDefinitionParser extends BaseExtensionBeanDefi
         BeanDefinition definition = super.parse(element, parserContext);
 
         BeanDefinition parentDefinition = getParentBeanDefinition(element, parserContext);
-        parentDefinition.getPropertyValues().addPropertyValue("connectionProviderResolver", definition);
+        parentDefinition.getPropertyValues().addPropertyValue(CONNECTION_PROVIDER_RESOLVER_PROPERTY, definition);
 
         return null;
     }

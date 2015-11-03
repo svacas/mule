@@ -61,6 +61,25 @@
         </xsd:attribute>
     </xsd:complexType>
 
+    <xsd:element name="abstractConnectionProvider" abstract="true">
+        <xsd:annotation>
+            <xsd:documentation>
+                Settings which define how the platform should manage dynamic instances of a configuration element.
+            </xsd:documentation>
+        </xsd:annotation>
+    </xsd:element>
+
+    <xsd:complexType name="abstractConnectionProviderType">
+        <xsd:annotation>
+            <xsd:documentation>
+                Abstract type for ConnectionProvider elements.
+            </xsd:documentation>
+        </xsd:annotation>
+        <xsd:complexContent>
+            <xsd:extension base="mule:annotatedType"/>
+        </xsd:complexContent>
+    </xsd:complexType>
+
     <xsd:element name="dynamic-config-policy" type="dynamicConfigPolicyType">
         <xsd:annotation>
             <xsd:documentation>
@@ -68,6 +87,7 @@
             </xsd:documentation>
         </xsd:annotation>
     </xsd:element>
+
 
     <xsd:complexType name="dynamicConfigPolicyType">
         <xsd:annotation>
@@ -107,17 +127,6 @@
                 </xsd:documentation>
             </xsd:annotation>
         </xsd:attribute>
-    </xsd:complexType>
-
-    <xsd:complexType name="abstractConnectionProviderType">
-        <xsd:annotation>
-            <xsd:documentation>
-                Abstract type for ConnectionProvider elements.
-            </xsd:documentation>
-        </xsd:annotation>
-        <xsd:complexContent>
-            <xsd:extension base="mule:annotatedType"/>
-        </xsd:complexContent>
     </xsd:complexType>
 
 </xsd:schema>

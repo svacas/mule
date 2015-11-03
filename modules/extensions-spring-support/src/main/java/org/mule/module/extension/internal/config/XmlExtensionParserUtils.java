@@ -79,6 +79,8 @@ final class XmlExtensionParserUtils
     private static final TemplateParser parser = TemplateParser.createMuleStyleParser();
     private static final ConversionService conversionService = new DefaultConversionService();
 
+    public static final String CONNECTION_PROVIDER_RESOLVER_PROPERTY = "connectionProviderResolver";
+
     /**
      * Parses the given {@code element} for an attribute named {@code name}. If not found,
      * a name is auto generated for the element. In either case, the obtained name

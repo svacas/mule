@@ -9,6 +9,7 @@ package org.mule.module.extension.internal;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertThat;
 import static org.mule.extension.annotation.api.Extension.DEFAULT_CONFIG_NAME;
@@ -24,9 +25,9 @@ import static org.mule.module.extension.HeisenbergExtension.SCHEMA_LOCATION;
 import static org.mule.module.extension.HeisenbergExtension.SCHEMA_VERSION;
 import org.mule.config.MuleManifest;
 import org.mule.extension.annotation.api.Configuration;
+import org.mule.extension.annotation.api.Configurations;
 import org.mule.extension.annotation.api.Extension;
 import org.mule.extension.annotation.api.Operation;
-import org.mule.extension.annotation.api.Configurations;
 import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.Parameter;
 import org.mule.extension.annotation.api.capability.Xml;
@@ -38,11 +39,13 @@ import org.mule.extension.api.introspection.declaration.fluent.Descriptor;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.ParameterDeclaration;
 import org.mule.module.extension.HealthStatus;
+import org.mule.module.extension.HeisenbergConnection;
 import org.mule.module.extension.HeisenbergExtension;
 import org.mule.module.extension.HeisenbergOperations;
 import org.mule.module.extension.KnockeableDoor;
 import org.mule.module.extension.MoneyLaunderingOperation;
 import org.mule.module.extension.Ricin;
+import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingTypeModelProperty;
 import org.mule.tck.size.SmallTest;
 import org.mule.util.CollectionUtils;
@@ -81,6 +84,7 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
     private static final String ALIAS = "alias";
     private static final String KNOCK = "knock";
     private static final String KNOCK_MANY = "knockMany";
+    private static final String CALL_SAUL = "callSaul";
     private static final String EXTENSION_VERSION = MuleManifest.getProductVersion();
 
     @Before
@@ -170,7 +174,7 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
 
     private void assertTestModuleOperations(Declaration declaration) throws Exception
     {
-        assertThat(declaration.getOperations(), hasSize(14));
+        assertThat(declaration.getOperations(), hasSize(15));
         assertOperation(declaration, SAY_MY_NAME_OPERATION, "");
         assertOperation(declaration, GET_ENEMY_OPERATION, "");
         assertOperation(declaration, KILL_OPERATION, "");
@@ -183,6 +187,7 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
         assertOperation(declaration, LAUNDER_MONEY, "");
         assertOperation(declaration, INJECTED_EXTENSION_MANAGER, "");
         assertOperation(declaration, ALIAS, "");
+        assertOperation(declaration, CALL_SAUL, "");
 
         OperationDeclaration operation = getOperation(declaration, SAY_MY_NAME_OPERATION);
         assertThat(operation, is(notNullValue()));
@@ -230,6 +235,12 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
 
         operation = getOperation(declaration, KNOCK_MANY);
         assertParameter(operation.getParameters(), "doors", "", DataType.of(List.class, KnockeableDoor.class), true, SUPPORTED, null);
+
+        operation = getOperation(declaration, CALL_SAUL);
+        assertThat(operation.getParameters(), is(empty()));
+        ConnectionTypeModelProperty connectionType = operation.getModelProperty(ConnectionTypeModelProperty.KEY);
+        assertThat(connectionType, is(notNullValue()));
+        assertThat(connectionType.getConnectionType(), equalTo(HeisenbergConnection.class));
     }
 
     private void assertOperation(Declaration declaration,

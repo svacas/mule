@@ -15,7 +15,6 @@ import static org.hamcrest.Matchers.notNullValue;
 import static org.hamcrest.Matchers.nullValue;
 import static org.junit.Assert.assertThat;
 import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.notNull;
 import static org.mockito.Matchers.same;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -251,7 +250,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
         factory.createFrom(descriptor);
     }
 
-    @Test(expected = IllegalArgumentException.class)
+    @Test
     public void configlessDescriptor()
     {
         factory.createFrom(new DeclarationDescriptor().named("noConfigs").onVersion("1.0"));
@@ -287,7 +286,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     {
         assertThat(extensionModel.getConnectionProviders(), hasSize(1));
         ConnectionProviderModel connectionProvider = extensionModel.getConnectionProviders().get(0);
-        assertThat(connectionProvider, is(notNull()));
+        assertThat(connectionProvider, is(notNullValue()));
         assertThat(connectionProvider.getName(), is(CONNECTION_PROVIDER_NAME));
         assertThat(connectionProvider.getDescription(), is(CONNECTION_PROVIDER_DESCRIPTION));
         assertThat(connectionProvider.getConnectionProviderFactory(), is(sameInstance(reference.getConnectionProviderFactory())));

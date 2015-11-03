@@ -37,6 +37,7 @@ import org.mule.module.extension.internal.introspection.validation.ConnectionPro
 import org.mule.module.extension.internal.introspection.validation.ModelValidator;
 import org.mule.module.extension.internal.introspection.validation.NameClashModelValidator;
 import org.mule.module.extension.internal.runtime.executor.OperationExecutorFactoryWrapper;
+import org.mule.util.CollectionUtils;
 import org.mule.util.ValueHolder;
 import org.mule.util.collection.ImmutableListCollector;
 
@@ -118,6 +119,11 @@ public final class DefaultExtensionFactory implements ExtensionFactory
 
     private List<ConfigurationModel> sortConfigurations(List<ConfigurationModel> configurationModels)
     {
+        if (CollectionUtils.isEmpty(configurationModels))
+        {
+            return configurationModels;
+        }
+
         List<ConfigurationModel> sorted = new ArrayList<>(configurationModels.size());
 
         // first one is kept as default while the rest are alpha sorted
@@ -136,7 +142,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
     {
         return declarations.stream()
                 .map(declaration -> toConfiguration(declaration, extensionModelValueHolder))
-                .collect(new ImmutableListCollector<>());
+                .collect(toList());
     }
 
     private ConfigurationModel toConfiguration(ConfigurationDeclaration declaration, ValueHolder<ExtensionModel> extensionModel)
@@ -190,7 +196,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
     private List<ParameterModel> toConfigParameters(List<ParameterDeclaration> declarations)
     {
         List<ParameterModel> parameterModels = toParameters(declarations);
-        alphaSortDescribedList(parameterModels);
+        //alphaSortDescribedList(parameterModels);
 
         return parameterModels;
     }

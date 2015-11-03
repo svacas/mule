@@ -15,21 +15,6 @@
                     <xs:choice minOccurs="0" maxOccurs="unbounded">
                         <xs:element xmlns:extension="http://www.mulesoft.org/schema/mule/extension" minOccurs="0" maxOccurs="1" ref="extension:abstractConnectionProviderType"></xs:element>
                         <xs:element xmlns:extension="http://www.mulesoft.org/schema/mule/extension" minOccurs="0" maxOccurs="1" ref="extension:dynamic-config-policy"></xs:element>
-                        <xs:element minOccurs="0" maxOccurs="1" name="enemies">
-                            <xs:complexType>
-                                <xs:sequence>
-                                    <xs:element minOccurs="0" maxOccurs="unbounded" name="enemy">
-                                        <xs:complexType>
-                                            <xs:simpleContent>
-                                                <xs:extension base="xs:string">
-                                                    <xs:attribute type="mule:expressionString" use="required" name="value"></xs:attribute>
-                                                </xs:extension>
-                                            </xs:simpleContent>
-                                        </xs:complexType>
-                                    </xs:element>
-                                </xs:sequence>
-                            </xs:complexType>
-                        </xs:element>
                         <xs:element minOccurs="0" maxOccurs="1" name="next-door">
                             <xs:complexType>
                                 <xs:complexContent>
@@ -50,23 +35,38 @@
                                 </xs:sequence>
                             </xs:complexType>
                         </xs:element>
+                        <xs:element minOccurs="0" maxOccurs="1" name="enemies">
+                            <xs:complexType>
+                                <xs:sequence>
+                                    <xs:element minOccurs="0" maxOccurs="unbounded" name="enemy">
+                                        <xs:complexType>
+                                            <xs:simpleContent>
+                                                <xs:extension base="xs:string">
+                                                    <xs:attribute type="mule:expressionString" use="required" name="value"></xs:attribute>
+                                                </xs:extension>
+                                            </xs:simpleContent>
+                                        </xs:complexType>
+                                    </xs:element>
+                                </xs:sequence>
+                            </xs:complexType>
+                        </xs:element>
                     </xs:choice>
                     <xs:attribute type="xs:string" use="required" name="name"></xs:attribute>
-                    <xs:attribute type="mule:expressionInt" use="optional" name="age"></xs:attribute>
-                    <xs:attribute type="mule:expressionBoolean" use="required" name="cancer"></xs:attribute>
-                    <xs:attribute type="mule:expressionMap" use="optional" name="candidateDoors"></xs:attribute>
-                    <xs:attribute type="mule:expressionMap" use="required" name="dateOfBirth"></xs:attribute>
-                    <xs:attribute type="mule:expressionMap" use="required" name="dateOfDeath"></xs:attribute>
-                    <xs:attribute type="mule:expressionList" use="optional" name="enemies"></xs:attribute>
-                    <xs:attribute xmlns="http://www.mulesoft.org/schema/mule/heisenberg" type="org.mule.module.extension.HealthStatusEnumType" use="required" name="finalHealth"></xs:attribute>
-                    <xs:attribute type="xs:string" use="optional" name="firstEndevour"></xs:attribute>
-                    <xs:attribute xmlns="http://www.mulesoft.org/schema/mule/heisenberg" type="org.mule.module.extension.HealthStatusEnumType" use="required" name="initialHealth"></xs:attribute>
-                    <xs:attribute type="mule:expressionString" use="optional" name="labAddress"></xs:attribute>
-                    <xs:attribute type="mule:expressionDecimal" use="required" name="money"></xs:attribute>
-                    <xs:attribute type="mule:expressionString" use="optional" name="myName"></xs:attribute>
                     <xs:attribute type="mule:expressionObject" use="optional" name="nextDoor"></xs:attribute>
                     <xs:attribute type="mule:expressionMap" use="optional" name="recipe"></xs:attribute>
                     <xs:attribute type="mule:expressionList" use="optional" name="ricinPacks"></xs:attribute>
+                    <xs:attribute type="mule:expressionList" use="optional" name="enemies"></xs:attribute>
+                    <xs:attribute type="mule:expressionBoolean" use="required" name="cancer"></xs:attribute>
+                    <xs:attribute xmlns="http://www.mulesoft.org/schema/mule/heisenberg" type="org.mule.module.extension.HealthStatusEnumType" use="required" name="finalHealth"></xs:attribute>
+                    <xs:attribute type="mule:expressionString" use="optional" name="labAddress"></xs:attribute>
+                    <xs:attribute xmlns="http://www.mulesoft.org/schema/mule/heisenberg" type="org.mule.module.extension.HealthStatusEnumType" use="required" name="initialHealth"></xs:attribute>
+                    <xs:attribute type="mule:expressionDecimal" use="required" name="money"></xs:attribute>
+                    <xs:attribute type="mule:expressionMap" use="optional" name="candidateDoors"></xs:attribute>
+                    <xs:attribute type="xs:string" use="optional" name="firstEndevour"></xs:attribute>
+                    <xs:attribute type="mule:expressionString" use="optional" name="myName"></xs:attribute>
+                    <xs:attribute type="mule:expressionInt" use="optional" name="age"></xs:attribute>
+                    <xs:attribute type="mule:expressionMap" use="required" name="dateOfBirth"></xs:attribute>
+                    <xs:attribute type="mule:expressionMap" use="required" name="dateOfDeath"></xs:attribute>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>
@@ -369,11 +369,11 @@
             </xs:extension>
         </xs:complexContent>
     </xs:complexType>
-    <xs:element xmlns:extension="http://www.mulesoft.org/schema/mule/extension" substitutionGroup="extension:abstractConnectionProviderType" name="connection">
+    <xs:element xmlns:extension="http://www.mulesoft.org/schema/mule/extension" substitutionGroup="extension:abstractConnectionProvider" name="connection">
         <xs:complexType>
             <xs:complexContent>
-                <xs:extension xmlns:mule="http://www.mulesoft.org/schema/mule/core" base="mule:abstractExtensionType">
-                    <xs:attribute type="mule:expressionString" use="required" name="saulPhoneNumber"></xs:attribute>
+                <xs:extension base="extension:abstractConnectionProviderType">
+                    <xs:attribute xmlns:mule="http://www.mulesoft.org/schema/mule/core" type="mule:expressionString" use="required" name="saulPhoneNumber"></xs:attribute>
                 </xs:extension>
             </xs:complexContent>
         </xs:complexType>

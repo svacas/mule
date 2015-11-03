@@ -19,8 +19,9 @@ import static org.mule.module.extension.internal.capability.xml.schema.model.Sch
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_ABSTRACT_EXTENSION_TYPE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_ABSTRACT_MESSAGE_PROCESSOR;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_ABSTRACT_MESSAGE_PROCESSOR_TYPE;
+import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_CONNECTION_PROVIDER_ELEMENT;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_CONNECTION_PROVIDER_TYPE;
-import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_TYPE;
+import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_ELEMENT;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_NAMESPACE;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_EXTENSION_SCHEMA_LOCATION;
 import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_MESSAGE_PROCESSOR_OR_OUTBOUND_ENDPOINT_TYPE;
@@ -173,13 +174,13 @@ public final class SchemaBuilder
     {
         Element providerElement = new TopLevelElement();
         providerElement.setName(providerModel.getName());
-        providerElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
+        providerElement.setSubstitutionGroup(MULE_EXTENSION_CONNECTION_PROVIDER_ELEMENT);
 
         LocalComplexType complexType = new LocalComplexType();
         providerElement.setComplexType(complexType);
 
         ExtensionType providerType = new ExtensionType();
-        providerType.setBase(MULE_ABSTRACT_EXTENSION_TYPE);
+        providerType.setBase(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
 
         ComplexContent complexContent = new ComplexContent();
         complexContent.setExtension(providerType);
@@ -234,7 +235,7 @@ public final class SchemaBuilder
             TopLevelElement objectElement = new TopLevelElement();
             objectElement.setMinOccurs(BigInteger.ZERO);
             objectElement.setMaxOccurs("1");
-            objectElement.setRef(MULE_EXTENSION_CONNECTION_PROVIDER_TYPE);
+            objectElement.setRef(MULE_EXTENSION_CONNECTION_PROVIDER_ELEMENT);
 
             all.getParticle().add(objectFactory.createElement(objectElement));
         }
@@ -247,7 +248,7 @@ public final class SchemaBuilder
             TopLevelElement objectElement = new TopLevelElement();
             objectElement.setMinOccurs(BigInteger.ZERO);
             objectElement.setMaxOccurs("1");
-            objectElement.setRef(MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_TYPE);
+            objectElement.setRef(MULE_EXTENSION_DYNAMIC_CONFIG_POLICY_ELEMENT);
 
             all.getParticle().add(objectFactory.createElement(objectElement));
         }
