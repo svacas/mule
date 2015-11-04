@@ -6,14 +6,11 @@
  */
 package org.mule.module.extension.internal.config;
 
-import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.CONNECTION_PROVIDER_RESOLVER_PROPERTY;
+import static org.mule.module.extension.internal.capability.xml.schema.model.SchemaConstants.MULE_NAMESPACE;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.parseConnectionProviderName;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.toElementDescriptorBeanDefinition;
-import org.mule.config.spring.util.SpringXMLUtils;
 import org.mule.extension.api.introspection.ConnectionProviderModel;
-import org.mule.util.StringUtils;
 
-import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
@@ -30,38 +27,14 @@ final class ConnectionProviderBeanDefinitionParser extends BaseExtensionBeanDefi
     }
 
     @Override
-    public BeanDefinition parse(Element element, ParserContext parserContext)
+    protected void doParse(BeanDefinitionBuilder builder, Element element, ParserContext parserContext)
     {
-        BeanDefinition definition = super.parse(element, parserContext);
-
-        BeanDefinition parentDefinition = getParentBeanDefinition(element, parserContext);
-        parentDefinition.getPropertyValues().addPropertyValue(CONNECTION_PROVIDER_RESOLVER_PROPERTY, definition);
-
-        return null;
-    }
-
-    @Override
-    protected void doParse(BeanDefinitionBuilder builder, Element element)
-    {
-        parseConnectionProviderName(element, builder);
+        if (element.getParentNode().getNamespaceURI().equals(MULE_NAMESPACE))
+        {
+            parseConnectionProviderName(element, builder);
+        }
 
         builder.addConstructorArgValue(providerModel);
         builder.addConstructorArgValue(toElementDescriptorBeanDefinition(element));
     }
-
-    private BeanDefinition getParentBeanDefinition(Element element, ParserContext parserContext)
-    {
-        String parentBean = getParentBeanName(element);
-        if (StringUtils.isBlank(parentBean))
-        {
-            throw new IllegalStateException("No parent for " + SpringXMLUtils.elementToString(element));
-        }
-        return parserContext.getRegistry().getBeanDefinition(parentBean);
-    }
-
-    private String getParentBeanName(Element element)
-    {
-        return ((Element) element.getParentNode()).getAttribute("name");
-    }
-
 }

@@ -6,8 +6,6 @@
  */
 package org.mule.module.extension.internal.runtime.config;
 
-import org.mule.api.MuleEvent;
-import org.mule.api.MuleException;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.module.extension.internal.runtime.ObjectBuilder;
 import org.mule.module.extension.internal.runtime.ParametrizedObjectBuilder;
@@ -16,7 +14,7 @@ import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
 /**
  * Implementation of {@link ObjectBuilder} to create instances that
  * match a given {@link ConfigurationModel}.
- * <p/>
+ * <p>
  * The object instances are created through the {@link ConfigurationModel#getConfigurationFactory()#instantiateObject()}
  * method. A {@link ResolverSet} is also used to automatically set this builders
  * properties. The name of the properties in the {@link ResolverSet} must match the
@@ -33,12 +31,6 @@ public final class ConfigurationObjectBuilder<T> extends ParametrizedObjectBuild
     {
         super(configurationModel.getConfigurationFactory().getObjectType(), configurationModel, resolverSet);
         this.configurationModel = configurationModel;
-    }
-
-    @Override
-    public T build(MuleEvent event) throws MuleException
-    {
-        return build(resolverSet.resolve(event));
     }
 
     /**

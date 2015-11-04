@@ -26,6 +26,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.beans.factory.xml.BeanDefinitionParser;
 import org.springframework.beans.factory.xml.NamespaceHandlerSupport;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
@@ -47,6 +48,7 @@ public class ExtensionNamespaceHandler extends NamespaceHandlerSupport
     private ExtensionManager extensionManager;
     private final Map<String, ExtensionModel> handledExtensions = new HashMap<>();
     private final Multimap<ExtensionModel, String> topLevelParameters = HashMultimap.create();
+    private final Map<String, BeanDefinitionParser> parsers = new HashMap<>();
 
     /**
      * Attempts to get a hold on a {@link ExtensionManager}
@@ -103,17 +105,17 @@ public class ExtensionNamespaceHandler extends NamespaceHandlerSupport
 
     private void registerOperations(ExtensionModel extensionModel)
     {
-        extensionModel.getOperations().forEach(operationModel -> registerBeanDefinitionParser(hyphenize(operationModel.getName()), new OperationBeanDefinitionParser(extensionModel, operationModel)));
+        extensionModel.getOperations().forEach(operationModel -> registerParser(hyphenize(operationModel.getName()), new OperationBeanDefinitionParser(extensionModel, operationModel)));
     }
 
     private void registerConfigurations(ExtensionModel extensionModel)
     {
-        extensionModel.getConfigurations().forEach(configurationModel -> registerBeanDefinitionParser(configurationModel.getName(), new ConfigurationBeanDefinitionParser(configurationModel)));
+        extensionModel.getConfigurations().forEach(configurationModel -> registerParser(configurationModel.getName(), new ConfigurationBeanDefinitionParser(configurationModel)));
     }
 
     private void registerConnectionProviders(ExtensionModel extensionModel)
     {
-        extensionModel.getConnectionProviders().forEach(providerModel -> registerBeanDefinitionParser(providerModel.getName(), new ConnectionProviderBeanDefinitionParser(providerModel)));
+        extensionModel.getConnectionProviders().forEach(providerModel -> registerParser(providerModel.getName(), new ConnectionProviderBeanDefinitionParser(providerModel)));
     }
 
     private void registerTopLevelParameters(ExtensionModel extensionModel)
@@ -133,7 +135,7 @@ public class ExtensionNamespaceHandler extends NamespaceHandlerSupport
                 String name = hyphenize(getTopLevelTypeName(parameterType));
                 if (topLevelParameters.put(extensionModel, name))
                 {
-                    registerBeanDefinitionParser(name, new TopLevelParameterTypeBeanDefinitionParser(parameterType));
+                    registerParser(name, new TopLevelParameterTypeBeanDefinitionParser(parameterType));
                 }
             }
 
@@ -181,5 +183,14 @@ public class ExtensionNamespaceHandler extends NamespaceHandlerSupport
         }
 
         throw new IllegalArgumentException(String.format("Could not find any extension associated to namespace %s", namespace));
+    }
+
+    private void registerParser(String elementName, BeanDefinitionParser parser) {
+        registerBeanDefinitionParser(elementName, parser);
+        parsers.put(elementName, parser);
+    }
+
+    BeanDefinitionParser getParser(String elementName) {
+        return parsers.get(elementName);
     }
 }

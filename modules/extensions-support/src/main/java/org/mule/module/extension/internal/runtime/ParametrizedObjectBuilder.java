@@ -7,6 +7,7 @@
 package org.mule.module.extension.internal.runtime;
 
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getField;
+import org.mule.api.MuleEvent;
 import org.mule.api.MuleException;
 import org.mule.extension.api.introspection.EnrichableModel;
 import org.mule.module.extension.internal.runtime.resolver.ResolverSet;
@@ -33,14 +34,20 @@ public abstract class ParametrizedObjectBuilder<T> extends BaseObjectBuilder<T>
         groupValueSetters = GroupValueSetter.settersFor(model);
     }
 
+    @Override
+    public T build(MuleEvent event) throws MuleException
+    {
+        return build(resolverSet.resolve(event));
+    }
+
     public T build(ResolverSetResult result) throws MuleException
     {
-        T configuration = instantiateObject();
+        T object = instantiateObject();
 
-        setValues(configuration, result, groupValueSetters);
-        setValues(configuration, result, singleValueSetters);
+        setValues(object, result, groupValueSetters);
+        setValues(object, result, singleValueSetters);
 
-        return configuration;
+        return object;
     }
 
     private List<ValueSetter> createSingleValueSetters(Class<?> prototypeClass, ResolverSet resolverSet)
