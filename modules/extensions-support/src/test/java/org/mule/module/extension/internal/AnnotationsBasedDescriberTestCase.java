@@ -23,6 +23,7 @@ import static org.mule.module.extension.HeisenbergExtension.HEISENBERG;
 import static org.mule.module.extension.HeisenbergExtension.NAMESPACE;
 import static org.mule.module.extension.HeisenbergExtension.SCHEMA_LOCATION;
 import static org.mule.module.extension.HeisenbergExtension.SCHEMA_VERSION;
+import static org.mule.module.extension.internal.introspection.AnnotationsBasedDescriber.DEFAULT_CONNECTION_PROVIDER_NAME;
 import org.mule.config.MuleManifest;
 import org.mule.extension.annotation.api.Configuration;
 import org.mule.extension.annotation.api.Configurations;
@@ -31,15 +32,18 @@ import org.mule.extension.annotation.api.Operation;
 import org.mule.extension.annotation.api.Operations;
 import org.mule.extension.annotation.api.Parameter;
 import org.mule.extension.annotation.api.capability.Xml;
+import org.mule.extension.annotation.api.connector.Providers;
 import org.mule.extension.api.introspection.DataType;
 import org.mule.extension.api.introspection.ExpressionSupport;
 import org.mule.extension.api.introspection.declaration.fluent.ConfigurationDeclaration;
+import org.mule.extension.api.introspection.declaration.fluent.ConnectionProviderDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.Declaration;
 import org.mule.extension.api.introspection.declaration.fluent.Descriptor;
 import org.mule.extension.api.introspection.declaration.fluent.OperationDeclaration;
 import org.mule.extension.api.introspection.declaration.fluent.ParameterDeclaration;
 import org.mule.module.extension.HealthStatus;
 import org.mule.module.extension.HeisenbergConnection;
+import org.mule.module.extension.HeisenbergConnectionProvider;
 import org.mule.module.extension.HeisenbergExtension;
 import org.mule.module.extension.HeisenbergOperations;
 import org.mule.module.extension.KnockeableDoor;
@@ -103,7 +107,7 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
 
         assertTestModuleConfiguration(declaration);
         assertTestModuleOperations(declaration);
-
+        assertTestModuleConnectionProviders(declaration);
         assertModelProperties(declaration);
     }
 
@@ -243,6 +247,21 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
         assertThat(connectionType.getConnectionType(), equalTo(HeisenbergConnection.class));
     }
 
+    private void assertTestModuleConnectionProviders(Declaration declaration) throws Exception
+    {
+        assertThat(declaration.getConnectionProviders(), hasSize(1));
+        ConnectionProviderDeclaration connectionProvider = declaration.getConnectionProviders().get(0);
+        assertThat(connectionProvider.getName(), is(DEFAULT_CONNECTION_PROVIDER_NAME));
+
+        List<ParameterDeclaration> parameters = connectionProvider.getParameters();
+        assertThat(parameters, hasSize(1));
+
+        assertParameter(parameters, "saulPhoneNumber", "", DataType.of(String.class), true, SUPPORTED, null);
+        ImplementingTypeModelProperty typeModelProperty = connectionProvider.getModelProperty(ImplementingTypeModelProperty.KEY);
+        assertThat(typeModelProperty, is(notNullValue()));
+        assertThat(typeModelProperty.getType(), equalTo(HeisenbergConnectionProvider.class));
+    }
+
     private void assertOperation(Declaration declaration,
                                  String operationName,
                                  String operationDescription) throws Exception
@@ -288,6 +307,7 @@ public class AnnotationsBasedDescriberTestCase extends AbstractAnnotationsBasedD
     @Xml(schemaLocation = SCHEMA_LOCATION, namespace = NAMESPACE, schemaVersion = SCHEMA_VERSION)
     @Configurations(HeisenbergExtension.class)
     @Operations({HeisenbergOperations.class, MoneyLaunderingOperation.class})
+    @Providers(HeisenbergConnectionProvider.class)
     public static class HeisenbergPointer extends HeisenbergExtension
     {
 

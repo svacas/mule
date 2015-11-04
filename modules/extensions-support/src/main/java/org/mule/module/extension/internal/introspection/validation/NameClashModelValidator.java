@@ -33,8 +33,8 @@ public final class NameClashModelValidator implements ModelValidator
     {
         Multimap<String, Described> names = HashMultimap.create();
 
-        getNames(names, model.getConfigurations());
-        getNames(names, model.getOperations());
+        getNames(names, model.getConfigurationModels());
+        getNames(names, model.getOperationModels());
         getNames(names, model.getConnectionProviders());
         getTopLevelParameterNames(names, model);
 
@@ -59,8 +59,8 @@ public final class NameClashModelValidator implements ModelValidator
 
     private Multimap<String, Described> getTopLevelParameterNames(Multimap<String, Described> names, ExtensionModel extensionModel)
     {
-        getTopLevelParameterNames(names, extensionModel.getConfigurations(), ConfigurationModel::getParameterModels);
-        getTopLevelParameterNames(names, extensionModel.getOperations(), OperationModel::getParameterModels);
+        getTopLevelParameterNames(names, extensionModel.getConfigurationModels(), ConfigurationModel::getParameterModels);
+        getTopLevelParameterNames(names, extensionModel.getOperationModels(), OperationModel::getParameterModels);
         getTopLevelParameterNames(names, extensionModel.getConnectionProviders(), ConnectionProviderModel::getParameterModels);
 
         return names;

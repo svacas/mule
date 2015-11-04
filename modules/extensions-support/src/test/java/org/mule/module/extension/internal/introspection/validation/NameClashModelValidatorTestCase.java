@@ -49,8 +49,8 @@ public class NameClashModelValidatorTestCase extends AbstractMuleTestCase
     public void before()
     {
         when(extensionModel.getName()).thenReturn("extensionName");
-        when(extensionModel.getConfigurations()).thenReturn(asList(configurationModel));
-        when(extensionModel.getOperations()).thenReturn(asList(operationModel));
+        when(extensionModel.getConfigurationModels()).thenReturn(asList(configurationModel));
+        when(extensionModel.getOperationModels()).thenReturn(asList(operationModel));
 
         simpleConfigParam = getParameter("simpleConfigParam", String.class);
         topLevelConfigParam = getParameter("topLevelConfigParam", Apple.class);

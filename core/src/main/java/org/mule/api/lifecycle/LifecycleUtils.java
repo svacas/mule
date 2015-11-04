@@ -17,6 +17,18 @@ import java.util.Optional;
 import org.apache.commons.collections.CollectionUtils;
 import org.slf4j.Logger;
 
+/**
+ * Utility class for performing lifecycle operations on objects, as long
+ * as they implement cooresponding annotations such as {@link Initialisable},
+ * {@link Startable}, {@link Stoppable}, {@link Disposable} or even
+ * {@link MuleContextAware}.
+ * <p>
+ * The {@link Optional} object container is also supported, in which case the
+ * operation will be evaluated on the value it holds or not at all if the value
+ * is not present.
+ *
+ * @since 3.7.0
+ */
 public class LifecycleUtils
 {
 

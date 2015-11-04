@@ -93,11 +93,13 @@ final class XmlExtensionParserUtils
         parseName(element, "config", builder);
     }
 
-    static void parseConnectionProviderName(Element element, BeanDefinitionBuilder builder) {
+    static void parseConnectionProviderName(Element element, BeanDefinitionBuilder builder)
+    {
         parseName(element, "connection-provider", builder);
     }
 
-    static void parseName(Element element, String type, BeanDefinitionBuilder builder) {
+    static void parseName(Element element, String type, BeanDefinitionBuilder builder)
+    {
         String name = AutoIdUtils.getUniqueName(element, type);
         element.setAttribute("name", name);
         builder.addConstructorArgValue(name);

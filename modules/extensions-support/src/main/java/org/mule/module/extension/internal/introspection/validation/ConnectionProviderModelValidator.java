@@ -7,19 +7,35 @@
 package org.mule.module.extension.internal.introspection.validation;
 
 import static java.util.stream.Collectors.toSet;
+import static org.mule.module.extension.internal.util.MuleExtensionUtils.getImplementingType;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.exception.IllegalModelDefinitionException;
 import org.mule.extension.api.introspection.ConfigurationModel;
 import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.extension.api.introspection.ExtensionModel;
+import org.mule.extension.api.introspection.OperationModel;
 import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingTypeModelProperty;
 import org.mule.util.CollectionUtils;
 
 import com.google.common.base.Joiner;
+import com.sun.org.apache.xpath.internal.ExtensionsProvider;
 
 import java.util.Set;
 
+/**
+ * {@link ModelValidator} which applies to {@link ExtensionModel}s which either contains
+ * {@link ConnectionProviderModel}s, {@link OperationModel}s which require a connection or both.
+ * <p>
+ * This validator makes sure that:
+ * <ul>
+ * <li>All operations require the same type of connections</li>
+ * <li>All the {@link ExtensionsProvider}s are compatible with all the {@link ConfigurationModel}s in the extension</li>
+ * <li>All the {@link ExtensionsProvider}s return connections of the same type as expected by the {@link OperationModel}s</li>
+ * </ul>
+ *
+ * @since 4.0
+ */
 public final class ConnectionProviderModelValidator implements ModelValidator
 {
 
@@ -44,15 +60,17 @@ public final class ConnectionProviderModelValidator implements ModelValidator
     private void validateConfigType(ConnectionProviderModel providerModel, ExtensionModel extensionModel)
     {
         Class<?> providerConfigType = providerModel.getConfigurationType();
-        for (ConfigurationModel configurationModel : extensionModel.getConfigurations())
+        for (ConfigurationModel configurationModel : extensionModel.getConfigurationModels())
         {
             ImplementingTypeModelProperty typeProperty = configurationModel.getModelProperty(ImplementingTypeModelProperty.KEY);
             if (typeProperty != null && !providerConfigType.isAssignableFrom(typeProperty.getType()))
             {
                 throw new IllegalModelDefinitionException(String.format(
-                        "Configuration '%s' in Extension '%s' is of type '%s' which cannot be used with the connection provider of type '%s'. " +
-                        "Please make sure that all configuration models in the extension can be used with any of the defined connection providers",
-                        configurationModel.getName(), extensionModel.getName(), typeProperty.getType().getName(), providerConfigType.getName()));
+                        "Configuration '%s' in Extension '%s' is of type '%s' which cannot be used with the connection provider of type '%s' " +
+                        "because it requires configs of type '%s'. Please make sure that all configuration models in the extension can be used with " +
+                        "any of the defined connection providers",
+                        configurationModel.getName(), extensionModel.getName(), getImplementingType(providerModel).getName(),
+                        typeProperty.getType().getName(), providerConfigType.getName()));
             }
         }
     }
@@ -71,7 +89,7 @@ public final class ConnectionProviderModelValidator implements ModelValidator
 
     private Class<?> getOperationsConnectionType(ExtensionModel extensionModel)
     {
-        Set<Class<?>> connectionTypes = extensionModel.getOperations().stream()
+        Set<Class<?>> connectionTypes = extensionModel.getOperationModels().stream()
                 .map(operation -> {
                     ConnectionTypeModelProperty connectionProperty = operation.getModelProperty(ConnectionTypeModelProperty.KEY);
                     return connectionProperty != null ? connectionProperty.getConnectionType() : null;

@@ -6,11 +6,18 @@
  */
 package org.mule.module.extension.internal.introspection.enricher;
 
+import org.mule.extension.api.introspection.OperationModel;
 import org.mule.extension.api.introspection.declaration.DescribingContext;
 import org.mule.extension.api.introspection.declaration.spi.ModelEnricher;
 import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.runtime.connector.ConnectionInterceptor;
 
+/**
+ * Adds a {@link ConnectionInterceptor} to all {@link OperationModel operations} which
+ * contain the {@link ConnectionTypeModelProperty}
+ *
+ * @since 4.0
+ */
 public class ConnectionModelEnricher implements ModelEnricher
 {
 

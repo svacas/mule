@@ -6,7 +6,10 @@
  */
 package org.mule.module.extension.internal.config;
 
+import static org.mule.config.i18n.MessageFactory.createStaticMessage;
 import static org.mule.module.extension.internal.config.XmlExtensionParserUtils.getResolverSet;
+import org.mule.api.MuleRuntimeException;
+import org.mule.api.config.ConfigurationException;
 import org.mule.extension.api.connection.ConnectionProvider;
 import org.mule.extension.api.introspection.ConnectionProviderModel;
 import org.mule.module.extension.internal.runtime.ObjectBuilder;
@@ -17,32 +20,56 @@ import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 
 import org.springframework.beans.factory.FactoryBean;
 
+/**
+ * A {@link FactoryBean} which returns a {@link ValueResolver} that yields instances
+ * of {@link ConnectionProvider} which are compliant with a {@link ConnectionProviderModel}.
+ * <p>
+ * Subsequent invokations to {@link #getObject()} method
+ * returns always the same {@link ValueResolver}.
+ *
+ * @since 4.0
+ */
 public class ConnectionProviderFactoryBean implements FactoryBean<ValueResolver>
 {
 
-    private final ConnectionProviderModel providerModel;
-    private final ElementDescriptor element;
+    private final ValueResolver<ConnectionProvider> resolver;
 
     public ConnectionProviderFactoryBean(ConnectionProviderModel providerModel, ElementDescriptor element)
     {
-        this.providerModel = providerModel;
-        this.element = element;
+        ResolverSet resolverSet;
+        try
+        {
+            resolverSet = getResolverSet(element, providerModel.getParameterModels());
+        }
+        catch (ConfigurationException e)
+        {
+            throw new MuleRuntimeException(createStaticMessage("Could not parse connection provider"), e);
+        }
+        ObjectBuilder<ConnectionProvider> builder = new ConnectionProviderObjectBuilder(providerModel, resolverSet);
+        resolver = new ObjectBuilderValueResolver<>(builder);
     }
 
+    /**
+     * @return A {@link ValueResolver} which yields instances of {@link ConnectionProvider}
+     */
     @Override
     public ValueResolver getObject() throws Exception
     {
-        ResolverSet resolverSet = getResolverSet(element, providerModel.getParameterModels());
-        ObjectBuilder<ConnectionProvider> builder = new ConnectionProviderObjectBuilder(providerModel, resolverSet);
-        return new ObjectBuilderValueResolver<>(builder);
+        return resolver;
     }
 
+    /**
+     * @return {@link ValueResolver}
+     */
     @Override
     public Class<?> getObjectType()
     {
         return ValueResolver.class;
     }
 
+    /**
+     * @return {@code true}
+     */
     @Override
     public boolean isSingleton()
     {

@@ -17,6 +17,7 @@ import org.mule.api.MuleEvent;
 import org.mule.api.construct.FlowConstruct;
 import org.mule.extension.annotation.api.param.Optional;
 import org.mule.extension.api.introspection.Described;
+import org.mule.extension.api.introspection.EnrichableModel;
 import org.mule.extension.api.introspection.ExpressionSupport;
 import org.mule.extension.api.introspection.ExtensionModel;
 import org.mule.extension.api.introspection.InterceptableModel;
@@ -28,6 +29,7 @@ import org.mule.extension.api.runtime.Interceptor;
 import org.mule.extension.api.runtime.InterceptorFactory;
 import org.mule.module.extension.internal.model.property.ConnectionTypeModelProperty;
 import org.mule.module.extension.internal.model.property.ImplementingMethodModelProperty;
+import org.mule.module.extension.internal.model.property.ImplementingTypeModelProperty;
 import org.mule.module.extension.internal.runtime.resolver.ValueResolver;
 import org.mule.util.collection.ImmutableListCollector;
 
@@ -118,7 +120,7 @@ public class MuleExtensionUtils
 
     public static List<OperationModel> getConnectedOperations(ExtensionModel extensionModel)
     {
-        return extensionModel.getOperations().stream()
+        return extensionModel.getOperationModels().stream()
                 .filter(o -> o.getModelProperty(ConnectionTypeModelProperty.KEY) != null)
                 .collect(toList());
     }
@@ -171,6 +173,12 @@ public class MuleExtensionUtils
         return interceptorFactories.stream()
                 .map(InterceptorFactory::createInterceptor)
                 .collect(new ImmutableListCollector<>());
+    }
+
+    public static <T> Class<T> getImplementingType(EnrichableModel model)
+    {
+        ImplementingTypeModelProperty property = model.getModelProperty(ImplementingTypeModelProperty.KEY);
+        return property != null ? (Class<T>) property.getType() : null;
     }
 
     public static String getDefaultValue(Optional optional)

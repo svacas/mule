@@ -47,13 +47,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Default implementation of {@link ExtensionFactory} which uses a
- * {@link ServiceRegistry} to locate instances of {@link ModelEnricher}.
+ * Default implementation of {@link ExtensionFactory}.
  * <p>
+ * It transforms {@link Descriptor} instances into fully fledged instances of
+ * {@link ImmutableExtensionModel}. Because the {@link Descriptor} is a raw, unvalidated
+ * object model, this instance uses a fixed list of {@link ModelValidator} to assure
+ * that the produced model is legal.
  * <p>
- * The discovery of {@link ModelEnricher} instances  will happen when the
- * {@link #DefaultExtensionFactory(ServiceRegistry, ClassLoader)} constructor is invoked
- * and the list of discovered instances will be used during the whole duration of this instance
+ * It uses a {@link ServiceRegistry} to locate instances of {@link ModelEnricher}.
+ * The discovery happens when the {@link #DefaultExtensionFactory(ServiceRegistry, ClassLoader)}
+ * constructor is invoked and the list of discovered instances will be used during
+ * the whole duration of this instance.
  *
  * @since 3.7.0
  */
@@ -151,7 +155,7 @@ public final class DefaultExtensionFactory implements ExtensionFactory
                                                declaration.getDescription(),
                                                extensionModel::get,
                                                declaration.getConfigurationFactory(),
-                                               toConfigParameters(declaration.getParameters()),
+                                               toParameters(declaration.getParameters()),
                                                declaration.getModelProperties(),
                                                declaration.getInterceptorFactories());
     }
@@ -189,16 +193,8 @@ public final class DefaultExtensionFactory implements ExtensionFactory
                 declaration.getConfigurationType(),
                 declaration.getConnectionType(),
                 declaration.getFactory(),
-                toConfigParameters(declaration.getParameters()),
+                toParameters(declaration.getParameters()),
                 declaration.getModelProperties());
-    }
-
-    private List<ParameterModel> toConfigParameters(List<ParameterDeclaration> declarations)
-    {
-        List<ParameterModel> parameterModels = toParameters(declarations);
-        //alphaSortDescribedList(parameterModels);
-
-        return parameterModels;
     }
 
     private List<ParameterModel> toOperationParameters(List<ParameterDeclaration> declarations)

@@ -36,7 +36,7 @@ public final class DefaultImplicitConfigurationFactory extends BaseImplicitObjec
     @Override
     public <C> ConfigurationInstance<C> createImplicitConfigurationInstance(ExtensionModel extensionModel, MuleEvent event)
     {
-        ConfigurationModel implicitConfigurationModel = getFirstImplicit(extensionModel.getConfigurations());
+        ConfigurationModel implicitConfigurationModel = getFirstImplicit(extensionModel.getConfigurationModels());
 
         if (implicitConfigurationModel == null)
         {

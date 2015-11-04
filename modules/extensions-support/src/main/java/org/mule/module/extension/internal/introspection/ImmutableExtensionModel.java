@@ -45,8 +45,9 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
      * @param version             the extension's version
      * @param configurationModels a {@link List} with the extension's {@link ConfigurationModel configurationModels}
      * @param operationModels     a {@link List} with the extension's {@link OperationModel operationModels}
+     * @param connectionProviders a {@link List} with the extension's {@link ConnectionProviderModel connection provider models}
      * @param modelProperties     A {@link Map} of custom properties which extend this model
-     * @throws IllegalArgumentException if {@code configurations} or {@link ParameterModel} are null or contain instances with non unique names, or if {@code name}  is blank
+     * @throws IllegalArgumentException if {@code configurations} or {@link ParameterModel} are {@code null} or contain instances with non unique names, or if {@code name} is blank
      */
     protected ImmutableExtensionModel(String name,
                                       String description,
@@ -72,7 +73,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
      * {@inheritDoc}
      */
     @Override
-    public List<ConfigurationModel> getConfigurations()
+    public List<ConfigurationModel> getConfigurationModels()
     {
         return ImmutableList.copyOf(configurations.values());
     }
@@ -81,7 +82,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
      * {@inheritDoc}
      */
     @Override
-    public ConfigurationModel getConfiguration(String name) throws NoSuchConfigurationException
+    public ConfigurationModel getConfigurationModel(String name) throws NoSuchConfigurationException
     {
         ConfigurationModel configurationModel = configurations.get(name);
         if (configurationModel == null)
@@ -96,7 +97,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
      * {@inheritDoc}
      */
     @Override
-    public List<OperationModel> getOperations()
+    public List<OperationModel> getOperationModels()
     {
         return ImmutableList.copyOf(operations.values());
     }
@@ -114,7 +115,7 @@ final class ImmutableExtensionModel extends AbstractImmutableModel implements Ex
      * {@inheritDoc}
      */
     @Override
-    public OperationModel getOperation(String name) throws NoSuchOperationException
+    public OperationModel getOperationModel(String name) throws NoSuchOperationException
     {
         OperationModel operationModel = operations.get(name);
         if (operationModel == null)

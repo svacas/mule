@@ -15,6 +15,16 @@ import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.xml.ParserContext;
 import org.w3c.dom.Element;
 
+/**
+ * Implementation of {@link BaseExtensionBeanDefinitionParser} capable of parsing instances
+ * which are compliant with the model defined in a {@link #providerModel}. The outcome of
+ * this parser will be a {@link ConnectionProviderModel}.
+ * <p>
+ * It supports simple attributes, pojos, lists/sets of simple attributes, list/sets of beans,
+ * and maps of simple attributes.
+ *
+ * @since 4.0
+ */
 final class ConnectionProviderBeanDefinitionParser extends BaseExtensionBeanDefinitionParser
 {
 

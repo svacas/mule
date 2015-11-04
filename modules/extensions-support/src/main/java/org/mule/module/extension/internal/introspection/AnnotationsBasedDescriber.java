@@ -11,6 +11,7 @@ import static org.mule.module.extension.internal.introspection.MuleExtensionAnno
 import static org.mule.module.extension.internal.introspection.MuleExtensionAnnotationParser.getMemberName;
 import static org.mule.module.extension.internal.introspection.MuleExtensionAnnotationParser.getParameterName;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getField;
+import static org.mule.module.extension.internal.util.IntrospectionUtils.getInterfaceGenerics;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getOperationMethods;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getParameterFields;
 import static org.mule.module.extension.internal.util.IntrospectionUtils.getParameterGroupFields;
@@ -68,8 +69,9 @@ import java.util.Set;
  */
 public final class AnnotationsBasedDescriber implements Describer
 {
-    private static final String DEFAULT_CONNECTION_PROVIDER_NAME = "connection";
-    private static final String CUSTOM_CONNECTION_PROVIDER_SUFFIX = "-" + DEFAULT_CONNECTION_PROVIDER_NAME;
+
+    public static final String DEFAULT_CONNECTION_PROVIDER_NAME = "connection";
+    public static final String CUSTOM_CONNECTION_PROVIDER_SUFFIX = "-" + DEFAULT_CONNECTION_PROVIDER_NAME;
 
     private final Class<?> extensionType;
     private final VersionResolver versionResolver;
@@ -272,7 +274,7 @@ public final class AnnotationsBasedDescriber implements Describer
             description = providerAnnotation.description();
         }
 
-        List<Class<?>> providerGenerics = IntrospectionUtils.getInterfaceGenerics(providerClass, ConnectionProvider.class);
+        List<Class<?>> providerGenerics = getInterfaceGenerics(providerClass, ConnectionProvider.class);
 
         if (providerGenerics.size() != 2)
         {
@@ -283,9 +285,10 @@ public final class AnnotationsBasedDescriber implements Describer
 
         ConnectionProviderDescriptor providerDescriptor = declaration.withConnectionProvider(name)
                 .describedAs(description)
-                .createdWith(new DefaultConnectionProviderFactory<>(declaration, providerClass))
+                .createdWith(new DefaultConnectionProviderFactory<>(providerClass))
                 .forConfigsOfType(providerGenerics.get(0))
-                .whichGivesConnectionsOfType(providerGenerics.get(1));
+                .whichGivesConnectionsOfType(providerGenerics.get(1))
+                .withModelProperty(ImplementingTypeModelProperty.KEY, new ImplementingTypeModelProperty(providerClass));
 
         declareAnnotatedParameters(providerClass, providerDescriptor, providerDescriptor.with());
     }

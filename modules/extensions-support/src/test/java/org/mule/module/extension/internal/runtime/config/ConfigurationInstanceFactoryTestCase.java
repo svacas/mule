@@ -71,7 +71,7 @@ public class ConfigurationInstanceFactoryTestCase extends AbstractMuleTestCase
         when(configurationModel.getModelProperty(ParameterGroupModelProperty.KEY)).thenReturn(null);
         when(configurationModel.getModelProperty(ConnectionTypeModelProperty.KEY)).thenReturn(null);
         when(configurationModel.getInterceptorFactories()).thenReturn(asList(() -> interceptor1, () -> interceptor2));
-        when(configurationModel.getExtensionModel().getOperations()).thenReturn(asList(operationModel));
+        when(configurationModel.getExtensionModel().getOperationModels()).thenReturn(asList(operationModel));
         when(operationModel.getModelProperty(ConnectionTypeModelProperty.KEY)).thenReturn(new ConnectionTypeModelProperty(Object.class));
 
         resolverSet = ConfigurationObjectBuilderTestCase.createResolverSet();

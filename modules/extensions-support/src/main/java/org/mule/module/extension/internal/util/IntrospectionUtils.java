@@ -156,13 +156,19 @@ public class IntrospectionUtils
     public static List<Class<?>> getInterfaceGenerics(Class<?> type, Class<?> implementedInterface)
     {
         ResolvableType interfaceType = null;
-        for (ResolvableType iType : ResolvableType.forClass(type).getInterfaces())
+        Class<?> searchClass = type;
+
+        while (!Object.class.equals(searchClass))
         {
-            if (iType.getRawClass().equals(implementedInterface))
+            for (ResolvableType iType : ResolvableType.forClass(searchClass).getInterfaces())
             {
-                interfaceType = iType;
-                break;
+                if (iType.getRawClass().equals(implementedInterface))
+                {
+                    interfaceType = iType;
+                    break;
+                }
             }
+            searchClass = searchClass.getSuperclass();
         }
 
         if (interfaceType == null)

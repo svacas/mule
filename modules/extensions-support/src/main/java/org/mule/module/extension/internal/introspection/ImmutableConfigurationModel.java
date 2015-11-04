@@ -35,11 +35,11 @@ final class ImmutableConfigurationModel extends AbstractInterceptableModel imple
      *
      * @param name                 the configuration's name
      * @param description          the configuration's description
-     * @param configurationFactory         the {@link ConfigurationFactory}. Cannot be {@code null}
+     * @param configurationFactory the {@link ConfigurationFactory}. Cannot be {@code null}
      * @param parameterModels      a {@link List} with the configuration's {@link ParameterModel parameterModels}
      * @param modelProperties      A {@link Map} of custom properties which extend this model
      * @param interceptorFactories A {@link List} with the {@link InterceptorFactory} instances that should be applied to instances built from this model
-     * @throws IllegalArgumentException if {@code name} is blank
+     * @throws IllegalArgumentException if {@code name} is blank or {@code configurationFactory} is {@code null}
      */
     protected ImmutableConfigurationModel(String name,
                                           String description,
@@ -50,7 +50,7 @@ final class ImmutableConfigurationModel extends AbstractInterceptableModel imple
                                           List<InterceptorFactory> interceptorFactories)
     {
         super(name, description, modelProperties, interceptorFactories);
-        checkArgument(configurationFactory != null, "instantiator cannot be null");
+        checkArgument(configurationFactory != null, "configuration factory cannot be null");
 
         this.extensionModelSupplier = extensionModelSupplier;
         this.parameterModels = immutableList(parameterModels);

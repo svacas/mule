@@ -120,7 +120,7 @@ public class DefaultExtensionManagerTestCase extends AbstractMuleTestCase
         this.extensionsManager = extensionsManager;
 
         when(extensionModel1.getName()).thenReturn(EXTENSION1_NAME);
-        when(extensionModel1.getConfigurations()).thenReturn(asList(extension1ConfigurationModel));
+        when(extensionModel1.getConfigurationModels()).thenReturn(asList(extension1ConfigurationModel));
         when(extensionModel2.getName()).thenReturn(EXTENSION2_NAME);
 
         when(extensionModel1.getVersion()).thenReturn(EXTENSION1_VERSION);
@@ -132,8 +132,8 @@ public class DefaultExtensionManagerTestCase extends AbstractMuleTestCase
         when(extension1ConfigurationModel.getExtensionModel()).thenReturn(extensionModel1);
         when(extension1ConfigurationModel.getInterceptorFactories()).thenReturn(emptyList());
 
-        when(extensionModel1.getConfiguration(EXTENSION1_CONFIG_NAME)).thenReturn(extension1ConfigurationModel);
-        when(extensionModel1.getOperation(EXTENSION1_OPERATION_NAME)).thenReturn(extension1OperationModel);
+        when(extensionModel1.getConfigurationModel(EXTENSION1_CONFIG_NAME)).thenReturn(extension1ConfigurationModel);
+        when(extensionModel1.getOperationModel(EXTENSION1_OPERATION_NAME)).thenReturn(extension1OperationModel);
         when(extension1OperationModel.getName()).thenReturn(EXTENSION1_OPERATION_NAME);
 
         when(extension1ConfigurationInstance.getValue()).thenReturn(configInstance);

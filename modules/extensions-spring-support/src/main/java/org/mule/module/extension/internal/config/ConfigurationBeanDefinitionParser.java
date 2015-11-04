@@ -27,7 +27,7 @@ import org.w3c.dom.Element;
 
 /**
  * Implementation of {@link BaseExtensionBeanDefinitionParser} capable of parsing instances
- * which are compliant with the model defined in a {@link ConfigurationModel}. The outcome of
+ * which are compliant with the model defined in a {@link #configurationModel}. The outcome of
  * this parser will be a {@link ConfigurationProviderFactoryBean}.
  * <p>
  * It supports simple attributes, pojos, lists/sets of simple attributes, list/sets of beans,

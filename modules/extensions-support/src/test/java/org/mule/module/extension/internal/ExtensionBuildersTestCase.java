@@ -126,7 +126,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
         assertThat(extensionModel.getName(), equalTo(WS_CONSUMER));
         assertThat(extensionModel.getDescription(), equalTo(WS_CONSUMER_DESCRIPTION));
         assertThat(extensionModel.getVersion(), equalTo(VERSION));
-        assertThat(extensionModel.getConfigurations(), hasSize(1));
+        assertThat(extensionModel.getConfigurationModels(), hasSize(1));
 
         verify(serviceRegistry).lookupProviders(any(Class.class), any(ClassLoader.class));
     }
@@ -134,7 +134,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     @Test
     public void defaultConfiguration() throws Exception
     {
-        ConfigurationModel configurationModel = extensionModel.getConfiguration(CONFIG_NAME);
+        ConfigurationModel configurationModel = extensionModel.getConfigurationModel(CONFIG_NAME);
         assertThat(configurationModel, is(notNullValue()));
         assertThat(configurationModel.getName(), equalTo(CONFIG_NAME));
         assertThat(configurationModel.getDescription(), equalTo(CONFIG_DESCRIPTION));
@@ -151,26 +151,26 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     @Test
     public void onlyOneConfig() throws Exception
     {
-        assertThat(extensionModel.getConfigurations(), hasSize(1));
-        assertThat(extensionModel.getConfigurations().get(0), is(sameInstance(extensionModel.getConfiguration(CONFIG_NAME))));
+        assertThat(extensionModel.getConfigurationModels(), hasSize(1));
+        assertThat(extensionModel.getConfigurationModels().get(0), is(sameInstance(extensionModel.getConfigurationModel(CONFIG_NAME))));
     }
 
     @Test(expected = NoSuchConfigurationException.class)
     public void noSuchConfiguration() throws Exception
     {
-        extensionModel.getConfiguration("fake");
+        extensionModel.getConfigurationModel("fake");
     }
 
     @Test(expected = NoSuchOperationException.class)
     public void noSuchOperation() throws Exception
     {
-        extensionModel.getOperation("fake");
+        extensionModel.getOperationModel("fake");
     }
 
     @Test
     public void operations() throws Exception
     {
-        List<OperationModel> operationModels = extensionModel.getOperations();
+        List<OperationModel> operationModels = extensionModel.getOperationModels();
         assertThat(operationModels, hasSize(3));
         assertConsumeOperation(operationModels);
         assertBroadcastOperation(operationModels);
@@ -197,7 +197,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
                                                                    .withConfig(beta).describedAs(beta).createdWith(mockInstantiator)
                                                                    .withConfig(alpha).describedAs(alpha).createdWith(mockInstantiator));
 
-        List<ConfigurationModel> configurationModels = extensionModel.getConfigurations();
+        List<ConfigurationModel> configurationModels = extensionModel.getConfigurationModels();
         assertThat(configurationModels, hasSize(3));
         assertThat(configurationModels.get(1).getName(), equalTo(alpha));
         assertThat(configurationModels.get(2).getName(), equalTo(beta));
@@ -206,10 +206,10 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     @Test
     public void operationsAlphaSorted()
     {
-        assertThat(extensionModel.getOperations(), hasSize(3));
-        assertThat(extensionModel.getOperations().get(0).getName(), equalTo(ARG_LESS));
-        assertThat(extensionModel.getOperations().get(1).getName(), equalTo(BROADCAST));
-        assertThat(extensionModel.getOperations().get(2).getName(), equalTo(CONSUMER));
+        assertThat(extensionModel.getOperationModels(), hasSize(3));
+        assertThat(extensionModel.getOperationModels().get(0).getName(), equalTo(ARG_LESS));
+        assertThat(extensionModel.getOperationModels().get(1).getName(), equalTo(BROADCAST));
+        assertThat(extensionModel.getOperationModels().get(2).getName(), equalTo(CONSUMER));
     }
 
     @Test(expected = IllegalArgumentException.class)
@@ -275,7 +275,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     @Test
     public void executorsAreInterceptable()
     {
-        for (OperationModel operation : extensionModel.getOperations())
+        for (OperationModel operation : extensionModel.getOperationModels())
         {
             assertThat(operation.getExecutor(), is(instanceOf(Interceptable.class)));
         }
@@ -311,7 +311,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     private void assertConsumeOperation(List<OperationModel> operationModels) throws NoSuchOperationException
     {
         OperationModel operationModel = operationModels.get(2);
-        assertThat(operationModel, is(sameInstance(extensionModel.getOperation(CONSUMER))));
+        assertThat(operationModel, is(sameInstance(extensionModel.getOperationModel(CONSUMER))));
 
         assertThat(operationModel.getName(), equalTo(CONSUMER));
         assertThat(operationModel.getDescription(), equalTo(GO_GET_THEM_TIGER));
@@ -325,7 +325,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     private void assertBroadcastOperation(List<OperationModel> operationModels) throws NoSuchOperationException
     {
         OperationModel operationModel = operationModels.get(1);
-        assertThat(operationModel, is(sameInstance(extensionModel.getOperation(BROADCAST))));
+        assertThat(operationModel, is(sameInstance(extensionModel.getOperationModel(BROADCAST))));
 
         assertThat(operationModel.getName(), equalTo(BROADCAST));
         assertThat(operationModel.getDescription(), equalTo(BROADCAST_DESCRIPTION));
@@ -340,7 +340,7 @@ public class ExtensionBuildersTestCase extends AbstractMuleTestCase
     private void assertArglessOperation(List<OperationModel> operationModels) throws NoSuchOperationException
     {
         OperationModel operationModel = operationModels.get(0);
-        assertThat(operationModel, is(sameInstance(extensionModel.getOperation(ARG_LESS))));
+        assertThat(operationModel, is(sameInstance(extensionModel.getOperationModel(ARG_LESS))));
 
         assertThat(operationModel.getName(), equalTo(ARG_LESS));
         assertThat(operationModel.getDescription(), equalTo(HAS_NO_ARGS));
