@@ -9,6 +9,7 @@ package org.mule.module.http.internal.listener;
 import static java.lang.String.format;
 import static org.mule.module.http.api.HttpConstants.Protocols.HTTP;
 import static org.mule.module.http.api.HttpConstants.Protocols.HTTPS;
+
 import org.mule.AbstractAnnotatedObject;
 import org.mule.api.DefaultMuleException;
 import org.mule.api.MuleContext;
@@ -46,11 +47,15 @@ import org.slf4j.LoggerFactory;
 public class DefaultHttpListenerConfig extends AbstractAnnotatedObject implements HttpListenerConfig, Initialisable, MuleContextAware
 {
 
+    public static final int ESG_PORT = Integer.parseInt(System.getProperty("mule.esg.port", "8081"));
+
+
     public static final int DEFAULT_MAX_THREADS = 128;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     public static final int DEFAULT_CONNECTION_IDLE_TIMEOUT = 30 * 1000;
 
+    private EsgRuntime esgRuntime = EsgRuntime.getInstance();
     private HttpConstants.Protocols protocol = HttpConstants.Protocols.HTTP;
     private String name;
     private String host;
@@ -134,6 +139,7 @@ public class DefaultHttpListenerConfig extends AbstractAnnotatedObject implement
     @Override
     public synchronized void initialise() throws InitialisationException
     {
+        EsgRuntime.EsgConfigProperties configProperties = new EsgRuntime.EsgConfigProperties(port, ESG_PORT, new EsgRuntime.RateLimitSettings(Integer.MAX_VALUE));
         if (initialised)
         {
             return;
@@ -150,10 +156,12 @@ public class DefaultHttpListenerConfig extends AbstractAnnotatedObject implement
             port = protocol.getDefaultPort();
         }
 
+        port = ESG_PORT;
+
         if (protocol.equals(HTTP) && tlsContext != null)
         {
             throw new InitialisationException(CoreMessages.createStaticMessage("TlsContext cannot be configured with protocol HTTP. " +
-                      "If you defined a tls:context element in your listener-config then you must set protocol=\"HTTPS\""), this);
+                                                                               "If you defined a tls:context element in your listener-config then you must set protocol=\"HTTPS\""), this);
         }
         if (protocol.equals(HTTPS) && tlsContext == null)
         {
@@ -188,7 +196,11 @@ public class DefaultHttpListenerConfig extends AbstractAnnotatedObject implement
             server = connectionManager.createSslServer(serverAddress, createWorkManagerSource(), tlsContext, usePersistentConnections, connectionIdleTimeout);
         }
         initialised = true;
+
+        esgRuntime.setup(configProperties);
+        esgRuntime.apply();
     }
+
 
     //We use a WorkManagerSource since the workManager instance may be recreated during stop/start and it would leave the server with an invalid work manager instance.
     private WorkManagerSource createWorkManagerSource()
@@ -311,6 +323,7 @@ public class DefaultHttpListenerConfig extends AbstractAnnotatedObject implement
             server.stop();
             started = false;
             logger.info("Stopped listener on " + listenerUrl());
+            esgRuntime.stop();
         }
     }
 
